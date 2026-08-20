@@ -1,0 +1,29 @@
+tfl:
+  base_url: "https://api.tfl.gov.uk"
+
+  line_status:
+    endpoint: "/Line/Mode/tube/Status"
+    refresh_minutes: 5
+
+  stop_points:
+    endpoint: "/StopPoint/Mode/tube"
+    refresh_minutes: 1440
+
+  arrivals:
+    endpoint: "/StopPoint/{station_id}/Arrivals"
+    refresh_minutes: 5
+
+open_meteo:
+  base_url: "https://api.open-meteo.com/v1"
+
+  weather:
+    endpoint: "/forecast"
+    latitude: 51.5074
+    longitude: -0.1278
+    timezone: "Europe/London"
+    refresh_minutes: 60
+
+gov_uk:
+  bank_holidays:
+    url: "https://www.gov.uk/bank-holidays.json"
+    region: "england-and-wales"
