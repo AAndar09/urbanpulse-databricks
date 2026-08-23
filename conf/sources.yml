@@ -41,3 +41,4 @@ gov_uk:
   bank_holidays:
     url: "https://www.gov.uk/bank-holidays.json"
     region: "england-and-wales"
+    refresh_minutes: 10080
