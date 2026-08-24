@@ -17,7 +17,7 @@ UrbanPulse is designed to answer questions such as:
 * Which lines or stations currently require operational attention?
 * Can historical operational data be used to predict elevated disruption risk?
 
-The final platform will support analytics, dashboard consumption, and machine learning.
+The final platform will support analytics, dashboards, machine learning, and downstream application consumption.
 
 ## Architecture
 
@@ -42,9 +42,11 @@ Validated and Structured Data
 Gold
 Business and Analytical Models
     |
-    +----> SQL Analytics
+    +----> Databricks SQL
+    +----> Databricks Apps Dashboard
     +----> Dashboard Serving Tables
     +----> Machine Learning
+    +----> Future PHP Web Application
 ```
 
 ### Bronze
@@ -64,7 +66,7 @@ http_status
 payload
 ```
 
-The original API response is also retained in a Unity Catalog Volume where appropriate.
+Original API responses are also retained in a Unity Catalog Volume where appropriate.
 
 ### Silver
 
@@ -83,13 +85,14 @@ Responsibilities include:
 
 ### Gold
 
-Gold provides business-facing dimensional models, facts, aggregates, and serving datasets.
+Gold provides business-facing dimensional models, fact tables, aggregates, and serving datasets.
 
 The Gold layer is designed for:
 
 * Databricks SQL
-* reporting
+* Databricks Apps
 * operational dashboards
+* analytical reporting
 * downstream application consumption
 * machine learning feature development
 
@@ -145,7 +148,7 @@ GOV.UK Bank Holidays
            Silver Bank Holidays
 ```
 
-The first Gold model has also been implemented:
+Current Gold processing:
 
 ```text
 Silver Bank Holidays
@@ -153,7 +156,28 @@ Silver Bank Holidays
 Generated Calendar
         |
         v
-Gold dim_date
+dim_date
+
+
+Silver Line Status
+        |
+        v
+dim_line
+SCD Type 2
+
+
+Silver Stop Points
+        |
+        v
+dim_station
+SCD Type 2
+
+
+dim_station
+     |
+     +---- bridge_station_line ----+
+                                   |
+                                dim_line
 ```
 
 ## Repository Structure
@@ -217,7 +241,7 @@ Raw landed files are stored under:
 /Volumes/workspace/urbanpulse_meta/landing/
 ```
 
-## Implemented Bronze Tables
+## Bronze Tables
 
 ```text
 workspace.urbanpulse_bronze.tfl_line_status
@@ -227,9 +251,9 @@ workspace.urbanpulse_bronze.weather
 workspace.urbanpulse_bronze.bank_holidays
 ```
 
-Each execution creates a new source snapshot rather than overwriting historical ingestion records.
+Each ingestion execution creates a new source snapshot rather than overwriting historical records.
 
-## Implemented Silver Tables
+## Silver Tables
 
 ```text
 workspace.urbanpulse_silver.tfl_line_status
@@ -259,15 +283,13 @@ snapshot_at
 
 Contains validated Tube station reference data.
 
-The canonical TfL station NAPTAN identifier is used for downstream station identity rather than station name alone.
-
-This avoids ambiguity where multiple TfL records share the same display name.
+The canonical TfL station NAPTAN identifier is used for downstream station identity rather than station name.
 
 ### TfL Station-Line Relationships
 
-Tube station and line relationships are normalized into a separate Silver table.
+Station and line relationships are normalized into a separate Silver table.
 
-This supports the many-to-many relationship between stations and Underground lines.
+The source can contain relationships to other TfL services such as bus routes. Gold models currently restrict these relationships to London Underground lines represented in `dim_line`.
 
 ### TfL Arrivals
 
@@ -275,14 +297,12 @@ Contains individual arrival predictions observed during each polling request.
 
 Repeated observations of the same train are preserved because they represent changes in operational state over time.
 
-Example:
-
 ```text
 10:00 | Train A | ETA 300 seconds
 10:05 | Train A | ETA 60 seconds
 ```
 
-These are treated as two valid observations.
+These are two separate observations.
 
 ### Weather
 
@@ -309,7 +329,7 @@ Repeated identical source snapshots are collapsed in Silver.
 
 ## Gold Layer
 
-The planned Gold model follows a dimensional design.
+The Gold layer follows a dimensional model designed for analytics and downstream consumption.
 
 ```text
 urbanpulse_gold
@@ -328,7 +348,7 @@ urbanpulse_gold
 
 ### `dim_date`
 
-The first Gold dimension is implemented.
+Implemented:
 
 ```text
 workspace.urbanpulse_gold.dim_date
@@ -338,13 +358,11 @@ Grain:
 
 > One row per calendar date.
 
-Current date range:
+Current range:
 
 ```text
 2019-01-01 to 2035-12-31
 ```
-
-The range covers all currently available bank-holiday records in the source data.
 
 Key attributes include:
 
@@ -366,8 +384,6 @@ holiday_name
 
 `date_key` uses the `YYYYMMDD` integer convention.
 
-Example:
-
 ```text
 2026-08-23 -> 20260823
 ```
@@ -384,15 +400,107 @@ Day-of-week numbering uses:
 7 Sunday
 ```
 
+### `dim_line`
+
+Implemented using Slowly Changing Dimension Type 2.
+
+```text
+workspace.urbanpulse_gold.dim_line
+```
+
+Business key:
+
+```text
+line_id
+```
+
+Each historical version receives a separate:
+
+```text
+line_key
+```
+
+Tracked attributes include:
+
+```text
+line_name
+mode_name
+is_active
+```
+
+Historical validity is represented by:
+
+```text
+effective_from
+effective_to
+is_current
+```
+
+### `dim_station`
+
+Implemented using Slowly Changing Dimension Type 2.
+
+```text
+workspace.urbanpulse_gold.dim_station
+```
+
+Business key:
+
+```text
+station_id
+```
+
+where:
+
+```text
+station_id = station_naptan
+```
+
+Tracked attributes include:
+
+```text
+station_name
+latitude
+longitude
+stop_type
+modes
+is_active
+```
+
+Station names are treated as descriptive values rather than identifiers.
+
+### `bridge_station_line`
+
+Implemented:
+
+```text
+workspace.urbanpulse_gold.bridge_station_line
+```
+
+Grain:
+
+> One current canonical Tube station to Tube line relationship.
+
+The bridge resolves:
+
+```text
+station_key
+line_key
+station_id
+line_id
+```
+
+TfL StopPoint data can include bus and other interchange relationships. These remain available in Silver but are excluded from the current Tube-specific Gold bridge.
+
 ## Data Quality
 
-Data quality checks are applied before records enter Silver or Gold.
+Data quality checks are applied before records are promoted between layers.
 
 Current checks include:
 
 * required identifiers
 * required timestamps
-* valid latitude and longitude ranges
+* valid latitude and longitude
 * non-negative arrival times
 * humidity between 0 and 100 percent
 * cloud cover between 0 and 100 percent
@@ -400,27 +508,52 @@ Current checks include:
 * non-negative wind measurements
 * valid date parsing
 * duplicate key detection
-* dimensional uniqueness checks
-* calendar coverage checks
+* dimensional uniqueness
+* referential integrity
+* calendar coverage
+* SCD effective-date integrity
+* source coverage validation
+* Gold relationship coverage
 
 Unexpected invalid records cause the relevant transformation to fail rather than silently entering downstream datasets.
 
 ## Idempotency
 
-Silver pipelines use Delta MERGE patterns to prevent duplicate records when transformations are rerun.
+Silver and Gold pipelines are designed to be safely rerunnable.
 
-Examples include:
+Current patterns include:
 
 ```text
 request_id + line_id + status_id
 arrival_observation_key
 weather_observation_key
 holiday_key
+station_line_key
 ```
 
-Gold dimensions are rebuilt or merged based on the behaviour of the dataset.
+Delta MERGE is used where incremental insert or update behaviour is appropriate.
 
-`dim_date` is deterministic and inexpensive to regenerate, so it is rebuilt atomically.
+Deterministic Gold structures such as `dim_date` and `bridge_station_line` are rebuilt when a full reconstruction is simpler and safer.
+
+## Slowly Changing Dimensions
+
+UrbanPulse uses SCD Type 2 for line and station reference data.
+
+Changes follow the pattern:
+
+```text
+unchanged
+    -> no write
+
+new
+    -> insert current version
+
+changed
+    -> expire existing version
+    -> insert new current version
+```
+
+Historical facts can therefore resolve the dimension record that was valid at the time of the observation.
 
 ## Engineering Principles
 
@@ -438,19 +571,20 @@ The project follows these conventions:
 * idempotent processing
 * Delta Lake for persisted tables
 * UTC timestamps for analytical data
+* explicit timezone semantics
 * data quality validation before promotion
 * normalized relational structures where appropriate
 * Git-based version control
 * reusable Delta utilities
-* testing of reusable logic as the project develops
+* SCD Type 2 for changing reference data
+* referential integrity checks between Gold models
+* automated testing as reusable logic grows
 
 ## Timestamp Strategy
 
 Operational datasets contain several different timestamp concepts.
 
-UrbanPulse keeps them separate rather than treating them as interchangeable.
-
-Examples include:
+UrbanPulse keeps these meanings separate:
 
 ```text
 prediction_timestamp
@@ -458,17 +592,25 @@ expected_arrival
 weather_observed_at
 snapshot_at
 processed_at
+effective_from
+effective_to
 ```
 
 Analytical timestamps are standardized to UTC where appropriate.
 
-Local London timestamps may also be retained when useful for readability or debugging.
+London-local calendar logic is applied explicitly when operational dates are required.
 
-## Downstream Application Support
+## Dashboard Strategy
 
-The Gold layer is being designed as a stable interface for downstream consumers.
+UrbanPulse will provide two dashboard experiences.
 
-A separate PHP-based web application will eventually use dashboard-oriented serving datasets such as:
+### Databricks Apps Dashboard
+
+Once the core Gold fact tables, dimensions, and serving tables are complete, a dashboard-style application will be built using **Databricks Apps**.
+
+This will be the first application layer implemented directly on top of the lakehouse.
+
+It will consume Gold datasets such as:
 
 ```text
 current_line_status
@@ -476,51 +618,100 @@ station_arrival_summary
 daily_network_kpis
 ```
 
-The frontend will not be responsible for rebuilding complex analytical logic from raw transport data.
+The Databricks application will focus on:
 
-Serving datasets will provide:
+* current network health
+* line disruption status
+* station activity
+* arrival metrics
+* historical operational trends
+* weather context
+* daily KPIs
+
+The dashboard will also provide an opportunity to demonstrate application development directly within the Databricks platform.
+
+### Future PHP Web Application
+
+At a later stage, a separate PHP-based web application will consume stable Gold serving datasets.
+
+The PHP application is intentionally separated from the Databricks data-engineering implementation.
+
+Gold serving datasets will provide:
 
 * stable identifiers
 * predictable schemas
 * precomputed metrics
 * clear timestamp semantics
-* consumer-friendly row grains
+* small consumer-friendly datasets
+* separation between current state and historical data
 
-## Planned Gold Model
+The PHP frontend will not be responsible for recreating complex Spark transformations or business logic.
 
-### Dimensions
+## Planned Gold Facts
+
+### `fact_line_status`
+
+Grain:
+
+> One Tube line-status observation per TfL polling snapshot.
+
+Planned relationships:
 
 ```text
-dim_date
 dim_line
+dim_date
+```
+
+Primary analytical outputs include:
+
+```text
+service observations
+disruption observations
+disruption rates
+historical line health
+```
+
+### `fact_arrival_observation`
+
+Grain:
+
+> One arrival prediction observed during one polling request.
+
+Planned relationships:
+
+```text
 dim_station
+dim_line
+dim_date
 ```
 
-### Relationship Tables
+### `fact_weather`
 
-```text
-bridge_station_line
-```
+Grain:
 
-### Facts
+> One London weather observation per observation timestamp.
 
-```text
-fact_line_status
-fact_arrival_observation
-fact_weather
-```
+It will support temporal enrichment of transport observations.
 
-### Serving Tables
+## Planned Serving Tables
 
-```text
-current_line_status
-station_arrival_summary
-daily_network_kpis
-```
+### `current_line_status`
+
+One row per Tube line containing its latest known operational state.
+
+### `station_arrival_summary`
+
+Aggregated station and line arrival metrics suitable for dashboards and application consumption.
+
+### `daily_network_kpis`
+
+Daily network-level operational and environmental metrics.
+
+These serving tables will be the preferred interface for both Databricks Apps and the later PHP frontend.
 
 ## Planned Analytics
 
-The Gold layer will support analysis such as:
+Gold models will support:
 
 * disruption frequency by line
 * service reliability by weekday
@@ -559,7 +750,7 @@ recent arrival frequency
 recent disruption rate
 ```
 
-A later phase will evaluate whether these features provide enough signal to model elevated disruption risk.
+A later phase will evaluate whether these features provide enough predictive signal to model elevated disruption risk.
 
 ## Databricks Features Covered
 
@@ -572,19 +763,22 @@ The project currently demonstrates or is designed to cover:
 * Unity Catalog Volumes
 * Delta Lake
 * Delta MERGE
-* Bronze, Silver, and Gold architecture
+* Medallion Architecture
 * nested JSON parsing
 * explicit Spark schemas
 * incremental ingestion
 * REST API integration
 * dimensional modelling
-* slowly changing dimensions
+* SCD Type 2
+* bridge tables
 * fact modelling
 * data quality
 * deterministic keys
+* referential integrity
 * window functions
 * orchestration
 * Databricks SQL
+* Databricks Apps
 * dashboards
 * MLflow
 * machine learning
@@ -597,7 +791,7 @@ The project currently demonstrates or is designed to cover:
 
 The implementation targets Databricks Free Edition.
 
-Where Free Edition differs from a typical production Databricks environment, the project separates:
+Where Free Edition differs from a typical production Databricks environment, the project distinguishes between:
 
 ```text
 Free Edition implementation
@@ -612,7 +806,7 @@ This keeps the project executable while preserving production-oriented design pr
 Current phase:
 
 ```text
-Gold dimensional modelling
+Gold fact modelling
 ```
 
 Completed:
@@ -621,23 +815,48 @@ Completed:
 [✓] Databricks project setup
 [✓] Unity Catalog schemas and landing Volume
 [✓] Reusable API ingestion framework
+
 [✓] TfL line-status Bronze ingestion
 [✓] TfL line-status Silver transformation
+
 [✓] TfL StopPoint Bronze ingestion
 [✓] TfL StopPoint Silver transformation
 [✓] Station-line normalization
+
 [✓] TfL arrivals Bronze ingestion
 [✓] TfL arrivals Silver transformation
+
 [✓] Open-Meteo Bronze ingestion
 [✓] Open-Meteo Silver transformation
+
 [✓] GOV.UK bank-holiday Bronze ingestion
 [✓] GOV.UK bank-holiday Silver transformation
+
 [✓] Gold data-model design
 [✓] Gold dim_date
+[✓] Gold dim_line with SCD Type 2
+[✓] Gold dim_station with SCD Type 2
+[✓] Gold bridge_station_line
 ```
 
 Next:
 
 ```text
-Gold dim_line with Slowly Changing Dimension Type 2 handling
+Gold fact_line_status
+```
+
+Later stages:
+
+```text
+Gold fact_arrival_observation
+Gold fact_weather
+Gold serving tables
+Databricks Apps dashboard
+workflow orchestration
+monitoring and observability
+Databricks SQL analytics
+machine learning and MLflow
+automated testing
+CI/CD
+PHP dashboard application
 ```
