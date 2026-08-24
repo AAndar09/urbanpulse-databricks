@@ -21,6 +21,16 @@ def prepare_line_source(
             "No TfL line-status snapshots found."
         )
 
+    first_seen_df = (
+        silver_df
+        .groupBy("line_id")
+        .agg(
+            F.min("snapshot_at").alias(
+                "first_seen_at"
+            )
+        )
+    )
+
     source_df = (
         silver_df
         .filter(
@@ -39,13 +49,18 @@ def prepare_line_source(
             "mode_name",
             "snapshot_at",
         ])
+        .join(
+            first_seen_df,
+            on="line_id",
+            how="left",
+        )
         .withColumn(
             "is_active",
             F.lit(True),
         )
     )
 
-    source_df = (
+    return (
         source_df
         .withColumn(
             "attribute_hash",
@@ -68,5 +83,3 @@ def prepare_line_source(
             ),
         )
     )
-
-    return source_df
