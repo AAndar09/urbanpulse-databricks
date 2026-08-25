@@ -17,6 +17,19 @@ def prepare_station_source(
         .first()["latest_snapshot"]
     )
 
+    first_seen_df = (
+        silver_df
+        .filter(
+            F.col("station_naptan").isNotNull()
+        )
+        .groupBy("station_naptan")
+        .agg(
+            F.min("snapshot_at").alias(
+                "first_seen_at"
+            )
+        )
+    )
+
     if latest_snapshot is None:
         raise ValueError(
             "No TfL stop-point snapshots found."
@@ -87,32 +100,33 @@ def prepare_station_source(
             ).alias(
                 "station_id"
             ),
-
             F.col(
                 "stop_point_id"
             ).alias(
                 "representative_stop_point_id"
             ),
-
             F.col(
                 "common_name"
             ).alias(
                 "station_name"
             ),
-
             "latitude",
             "longitude",
             "stop_type",
             "modes",
-
-            F.col(
-                "snapshot_at"
-            ),
-
+            "snapshot_at",
             F.lit(True).alias(
                 "is_active"
             ),
         )
+        .join(
+            first_seen_df,
+            F.col("station_id")
+            ==
+            F.col("station_naptan"),
+            how="left",
+        )
+        .drop("station_naptan")
     )
 
     return (
