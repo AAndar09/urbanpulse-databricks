@@ -2,5 +2,5 @@ dash==3.3.*
 dash-bootstrap-components==2.0.*
 plotly==6.5.*
 pandas
-databricks-sql-connector
+databricks-sql-connector[pyarrow]
 databricks-sdk
