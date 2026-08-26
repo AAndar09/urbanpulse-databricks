@@ -41,7 +41,7 @@ def get_current_line_status():
 
     return run_query(query)
 
-    def get_network_summary():
+def get_network_summary():
 
     table_name = os.environ[
         "CURRENT_LINE_STATUS_TABLE"
