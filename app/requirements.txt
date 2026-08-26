@@ -1,4 +1,6 @@
-databricks-sdk
-databricks-sql-connector
-streamlit>=1.36,<2
+dash==3.3.*
+dash-bootstrap-components==2.0.*
+plotly==6.5.*
 pandas
+databricks-sql-connector
+databricks-sdk

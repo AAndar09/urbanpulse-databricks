@@ -1,6 +1,5 @@
 command:
-  - streamlit
-  - run
+  - python
   - app.py
 
 env:
@@ -18,6 +17,3 @@ env:
 
   - name: GOLD_VALIDATION_RESULTS_TABLE
     valueFrom: gold_validation_results
-
-  - name: STREAMLIT_GATHER_USAGE_STATS
-    value: "false"
