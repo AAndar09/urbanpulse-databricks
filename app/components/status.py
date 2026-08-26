@@ -7,7 +7,7 @@ def get_service_style(status_description):
 
     if status == "good service":
         return {
-            "label": "Good Service",
+            "label": "Healthy",
             "color": "success",
         }
 
@@ -24,7 +24,7 @@ def get_service_style(status_description):
         for term in warning_terms
     ):
         return {
-            "label": status_description,
+            "label": "Degraded",
             "color": "warning",
         }
 
@@ -41,14 +41,11 @@ def get_service_style(status_description):
         for term in danger_terms
     ):
         return {
-            "label": status_description,
+            "label": "Disrupted",
             "color": "danger",
         }
 
     return {
-        "label": (
-            status_description
-            or "Unknown"
-        ),
+        "label": "Unknown",
         "color": "secondary",
     }
