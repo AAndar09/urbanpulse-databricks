@@ -1,23 +1,157 @@
+/* =========================================================
+   UrbanPulse
+   Core application theme
+
+   Light theme is the default.
+
+   Future night mode:
+   set the Bootstrap theme attribute on <html>:
+
+   document.documentElement.setAttribute(
+       "data-bs-theme",
+       "dark"
+   );
+
+   Restore light mode with:
+
+   document.documentElement.setAttribute(
+       "data-bs-theme",
+       "light"
+   );
+   ========================================================= */
+
+
+/* =========================================================
+   1. Design tokens
+   ========================================================= */
+
 :root {
+    /* Brand */
     --up-navy: #0f172a;
+    --up-navy-soft: #172554;
     --up-blue: #2563eb;
+    --up-blue-dark: #1d4ed8;
+
+    /* Semantic */
+    --up-success: #198754;
+    --up-warning: #f59e0b;
+    --up-danger: #dc3545;
+    --up-info: #0dcaf0;
+
+    /* Surfaces */
     --up-bg: #f8fafc;
-    --up-border: #e2e8f0;
+    --up-surface: #ffffff;
+    --up-surface-soft: #f8fafc;
+    --up-surface-hover: #f1f5f9;
+
+    /* Text */
+    --up-text: #0f172a;
+    --up-text-soft: #334155;
     --up-muted: #64748b;
+    --up-muted-light: #94a3b8;
+
+    /* Borders */
+    --up-border: #e2e8f0;
+    --up-border-soft: #f1f5f9;
+
+    /* Page kicker */
+    --up-kicker-bg: #dbeafe;
+    --up-kicker-text: #1e40af;
+
+    /* Shadows */
+    --up-shadow-sm:
+        0 4px 16px rgba(15, 23, 42, 0.05);
+
+    --up-shadow-md:
+        0 8px 24px rgba(15, 23, 42, 0.08);
+
+    /* Radius */
+    --up-radius-sm: 10px;
+    --up-radius-md: 14px;
+    --up-radius-lg: 18px;
+    --up-radius-pill: 999px;
+
+    /* Transitions */
+    --up-transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* =========================================================
+   2. Future dark / night mode tokens
+   ========================================================= */
+
+[data-bs-theme="dark"] {
+    --up-navy: #f8fafc;
+    --up-navy-soft: #cbd5e1;
+
+    --up-bg: #0b1120;
+    --up-surface: #111827;
+    --up-surface-soft: #172033;
+    --up-surface-hover: #1e293b;
+
+    --up-text: #f8fafc;
+    --up-text-soft: #e2e8f0;
+    --up-muted: #94a3b8;
+    --up-muted-light: #64748b;
+
+    --up-border: #273449;
+    --up-border-soft: #1e293b;
+
+    --up-kicker-bg: rgba(37, 99, 235, 0.18);
+    --up-kicker-text: #93c5fd;
+
+    --up-shadow-sm:
+        0 4px 18px rgba(0, 0, 0, 0.24);
+
+    --up-shadow-md:
+        0 8px 28px rgba(0, 0, 0, 0.32);
+}
+
+
+/* =========================================================
+   3. Base application
+   ========================================================= */
+
+html,
+body {
+    min-height: 100%;
 }
 
 body {
+    margin: 0;
     background: var(--up-bg);
-    color: var(--up-navy);
+    color: var(--up-text);
+    transition: var(--up-transition);
 }
 
+a {
+    transition: var(--up-transition);
+}
+
+
+/* =========================================================
+   4. Navbar
+   ========================================================= */
+
 .urbanpulse-navbar {
-    background: linear-gradient(
-        90deg,
-        #0f172a,
-        #172554
-    );
     min-height: 72px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #0f172a,
+            #172554
+        );
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        0 2px 12px rgba(15, 23, 42, 0.12);
 }
 
 .brand-title {
@@ -25,262 +159,428 @@ body {
     letter-spacing: -0.03em;
 }
 
+.navbar-dark .nav-link {
+    color:
+        rgba(255, 255, 255, 0.72);
+
+    font-weight: 600;
+
+    border-radius:
+        var(--up-radius-sm);
+
+    padding:
+        8px 14px !important;
+
+    margin-left: 4px;
+
+    transition: var(--up-transition);
+}
+
+.navbar-dark .nav-link:hover {
+    color: #ffffff;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+}
+
+.navbar-dark .nav-link.active {
+    color:
+        #ffffff !important;
+
+    background:
+        rgba(255, 255, 255, 0.14);
+}
+
+
+/* =========================================================
+   5. Future theme toggle
+   ========================================================= */
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 38px;
+
+    padding:
+        7px 12px;
+
+    color:
+        rgba(255, 255, 255, 0.82);
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.12);
+
+    border-radius:
+        var(--up-radius-pill);
+
+    font-size: 0.82rem;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition: var(--up-transition);
+}
+
+.theme-toggle:hover {
+    color: #ffffff;
+
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    border-color:
+        rgba(255, 255, 255, 0.22);
+}
+
+.theme-toggle-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    font-size: 1rem;
+}
+
+.theme-toggle-label {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   6. Main page layout
+   ========================================================= */
+
 .page-container {
+    width: 100%;
     max-width: 1500px;
-    margin: 0 auto;
-    padding: 32px;
+
+    margin:
+        0 auto;
+
+    padding:
+        32px 32px 48px;
 }
 
 .page-kicker {
     display: inline-block;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: #dbeafe;
-    color: #1e40af;
+
+    padding:
+        6px 12px;
+
+    border-radius:
+        var(--up-radius-pill);
+
+    background:
+        var(--up-kicker-bg);
+
+    color:
+        var(--up-kicker-text);
+
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 750;
+
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
 
 .page-title {
     margin-top: 12px;
+    margin-bottom: 6px;
+
+    color:
+        var(--up-text);
+
     font-size: 2.25rem;
     font-weight: 800;
+
     letter-spacing: -0.035em;
 }
 
 .page-description {
-    color: var(--up-muted);
     max-width: 750px;
+
+    margin-bottom: 0;
+
+    color:
+        var(--up-muted);
+
+    font-size: 0.98rem;
+    line-height: 1.6;
 }
 
-.section-title {
-    margin-top: 32px;
-    margin-bottom: 16px;
-    font-size: 1.25rem;
-    font-weight: 750;
-}
 
-.kpi-card {
-    border: 1px solid var(--up-border);
-    border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(
-        15,
-        23,
-        42,
-        0.05
-    );
-    height: 100%;
-}
-
-.kpi-label {
-    color: var(--up-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.kpi-value {
-    margin-top: 8px;
-    font-size: 2rem;
-    font-weight: 800;
-}
-
-.content-card {
-    border: 1px solid var(--up-border);
-    border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(
-        15,
-        23,
-        42,
-        0.04
-    );
-}
-
-.status-badge {
-    padding: 7px 11px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.table > :not(caption) > * > * {
-    padding-top: 14px;
-    padding-bottom: 14px;
-    vertical-align: middle;
-}
-
-.navbar-dark .nav-link {
-    color: rgba(255, 255, 255, 0.72);
-    font-weight: 600;
-    border-radius: 10px;
-    padding: 8px 14px !important;
-    margin-left: 4px;
-}
-
-.navbar-dark .nav-link:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.navbar-dark .nav-link.active {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.14);
-}
+/* =========================================================
+   7. Section hierarchy
+   ========================================================= */
 
 .section-header {
     margin-top: 36px;
     margin-bottom: 16px;
 }
 
-.section-header .section-title {
+.section-title {
     margin-top: 0;
     margin-bottom: 4px;
+
+    color:
+        var(--up-text);
+
+    font-size: 1.25rem;
+    font-weight: 750;
+
+    letter-spacing: -0.015em;
 }
 
 .section-description {
-    color: var(--up-muted);
     margin-bottom: 0;
+
+    color:
+        var(--up-muted);
+
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   8. KPI cards
+   ========================================================= */
+
+.kpi-card {
+    height: 100%;
+
+    background:
+        var(--up-surface);
+
+    border:
+        1px solid var(--up-border);
+
+    border-radius:
+        var(--up-radius-lg);
+
+    box-shadow:
+        var(--up-shadow-sm);
+
+    overflow: hidden;
+
+    transition: var(--up-transition);
+}
+
+.kpi-card:hover {
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        var(--up-shadow-md);
+}
+
+.kpi-label {
+    color:
+        var(--up-muted);
+
+    font-size: 0.72rem;
+    font-weight: 750;
+
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+}
+
+.kpi-value {
+    margin-top: 8px;
+
+    color:
+        var(--up-text);
+
+    font-size: 2rem;
+    font-weight: 800;
+
+    line-height: 1.15;
+    letter-spacing: -0.025em;
 }
 
 .kpi-helper {
-    color: var(--up-muted);
-    font-size: 0.8rem;
     margin-top: 8px;
+
+    color:
+        var(--up-muted);
+
+    font-size: 0.8rem;
+    line-height: 1.4;
 }
 
 .kpi-primary {
-    border-top: 4px solid #2563eb;
+    border-top:
+        4px solid var(--up-blue);
 }
 
 .kpi-success {
-    border-top: 4px solid #198754;
+    border-top:
+        4px solid var(--up-success);
 }
 
 .kpi-warning {
-    border-top: 4px solid #ffc107;
+    border-top:
+        4px solid var(--up-warning);
 }
 
 .kpi-danger {
-    border-top: 4px solid #dc3545;
+    border-top:
+        4px solid var(--up-danger);
 }
 
 .kpi-info {
-    border-top: 4px solid #0dcaf0;
+    border-top:
+        4px solid var(--up-info);
 }
 
-.js-plotly-plot {
-    border-radius: 12px;
+
+/* =========================================================
+   9. Standard content cards
+   ========================================================= */
+
+.content-card {
+    background:
+        var(--up-surface);
+
+    border:
+        1px solid var(--up-border);
+
+    border-radius:
+        var(--up-radius-lg);
+
+    box-shadow:
+        var(--up-shadow-sm);
+
+    overflow: hidden;
+
+    transition: var(--up-transition);
 }
 
-@media (max-width: 768px) {
-    .page-container {
-        padding: 20px;
-    }
+.content-card .card-header {
+    background:
+        var(--up-surface-soft);
 
-    .page-title {
-        font-size: 1.8rem;
-    }
+    color:
+        var(--up-text);
 
-    .kpi-value {
-        font-size: 1.6rem;
-    }
+    border-bottom:
+        1px solid var(--up-border);
 }
 
-.disruption-line-name {
-    font-size: 1.05rem;
-    font-weight: 750;
-    color: #0f172a;
+.content-card .card-body {
+    background:
+        var(--up-surface);
+
+    color:
+        var(--up-text);
 }
 
-.disruption-status-text {
-    margin-top: 3px;
-    color: #dc3545;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
 
-.disruption-divider {
-    margin: 14px 0;
-    border-color: #e2e8f0;
-    opacity: 1;
-}
+/* =========================================================
+   10. Service status badges
+   ========================================================= */
 
-.disruption-label {
-    margin-bottom: 8px;
-    color: #64748b;
+.status-badge {
+    padding:
+        7px 11px;
+
     font-size: 0.72rem;
     font-weight: 750;
+
+    letter-spacing: 0.015em;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   11. Tables
+   ========================================================= */
+
+.table {
+    --bs-table-bg:
+        transparent;
+
+    --bs-table-color:
+        var(--up-text);
+
+    --bs-table-hover-bg:
+        var(--up-surface-hover);
+
+    --bs-table-border-color:
+        var(--up-border-soft);
+
+    margin-bottom: 0;
+}
+
+.table > :not(caption) > * > * {
+    padding-top: 14px;
+    padding-bottom: 14px;
+
+    vertical-align: middle;
+
+    color:
+        var(--up-text);
+
+    border-color:
+        var(--up-border-soft);
+}
+
+.table thead th {
+    color:
+        var(--up-muted);
+
+    font-size: 0.74rem;
+    font-weight: 750;
+
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
+
+    white-space: nowrap;
+
+    border-bottom:
+        1px solid var(--up-border);
 }
 
-.disruption-primary {
-    color: #334155;
-    font-size: 0.9rem;
-    font-weight: 600;
-    line-height: 1.55;
-}
 
-.disruption-details {
-    margin-top: 10px;
-    margin-bottom: 0;
-    padding-left: 20px;
-    color: #64748b;
-    font-size: 0.88rem;
-    line-height: 1.5;
-}
-
-.reason-cell {
-    min-width: 320px;
-    max-width: 600px;
-}
-
-.reason-primary {
-    color: #334155;
-    font-size: 0.88rem;
-    font-weight: 600;
-    line-height: 1.5;
-}
-
-.reason-summary {
-    color: #2563eb;
-    font-size: 0.8rem;
-    font-weight: 700;
-    cursor: pointer;
-    user-select: none;
-}
-
-.reason-summary:hover {
-    color: #1d4ed8;
-}
-
-.reason-list {
-    margin-top: 10px;
-    margin-bottom: 0;
-    padding-left: 20px;
-    color: #64748b;
-    font-size: 0.84rem;
-    line-height: 1.55;
-}
-
-.reason-list li {
-    margin-bottom: 6px;
-}
+/* =========================================================
+   12. Disruption table
+   ========================================================= */
 
 .disruption-table thead th {
-    color: #64748b;
+    color:
+        var(--up-muted);
+
     font-size: 0.72rem;
     font-weight: 750;
+
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #e2e8f0;
+
+    border-bottom:
+        1px solid var(--up-border);
+
     white-space: nowrap;
 }
 
 .disruption-table tbody tr {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom:
+        1px solid var(--up-border-soft);
+
+    transition:
+        background-color 0.15s ease;
+}
+
+.disruption-table tbody tr:hover {
+    background:
+        var(--up-surface-hover);
 }
 
 .disruption-table tbody tr:last-child {
@@ -289,11 +589,433 @@ body {
 
 .disruption-line-cell {
     min-width: 130px;
-    color: #0f172a;
+
+    color:
+        var(--up-text);
+
+    font-weight: 700;
 }
 
 .disruption-status-cell {
     min-width: 140px;
+
+    color:
+        var(--up-text-soft);
+
     font-weight: 600;
-    color: #334155;
+}
+
+
+/* =========================================================
+   13. Disruption reason content
+   ========================================================= */
+
+.reason-cell {
+    min-width: 320px;
+    max-width: 600px;
+}
+
+.reason-primary {
+    color:
+        var(--up-text-soft);
+
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    line-height: 1.55;
+}
+
+.reason-summary {
+    color:
+        var(--up-blue);
+
+    font-size: 0.8rem;
+    font-weight: 700;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition:
+        color 0.15s ease;
+}
+
+.reason-summary:hover {
+    color:
+        var(--up-blue-dark);
+}
+
+.reason-summary::marker {
+    color:
+        var(--up-blue);
+}
+
+.reason-list {
+    margin-top: 10px;
+    margin-bottom: 0;
+
+    padding-left: 20px;
+
+    color:
+        var(--up-muted);
+
+    font-size: 0.84rem;
+
+    line-height: 1.55;
+}
+
+.reason-list li {
+    margin-bottom: 6px;
+}
+
+.reason-list li:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   14. Plotly chart containers
+   ========================================================= */
+
+.js-plotly-plot {
+    border-radius:
+        var(--up-radius-md);
+
+    overflow: hidden;
+}
+
+.plot-container {
+    width: 100% !important;
+}
+
+
+/*
+   Note:
+   Plotly chart colours/backgrounds are controlled primarily
+   by the Python figure layout.
+
+   When night mode is enabled later, the Dash callback should
+   switch figures from plotly_white to plotly_dark or apply
+   UrbanPulse-specific Plotly colours.
+*/
+
+
+/* =========================================================
+   15. Bootstrap dropdowns / controls
+   Prepared for future interactive pages
+   ========================================================= */
+
+.form-label {
+    color:
+        var(--up-text-soft);
+
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
+.form-control,
+.form-select {
+    background:
+        var(--up-surface);
+
+    color:
+        var(--up-text);
+
+    border:
+        1px solid var(--up-border);
+
+    border-radius:
+        var(--up-radius-sm);
+
+    transition: var(--up-transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background:
+        var(--up-surface);
+
+    color:
+        var(--up-text);
+
+    border-color:
+        var(--up-blue);
+
+    box-shadow:
+        0 0 0 0.2rem
+        rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================================================
+   16. Dash dropdown support
+   Prepared for station / line filters
+   ========================================================= */
+
+.Select-control {
+    background:
+        var(--up-surface) !important;
+
+    border-color:
+        var(--up-border) !important;
+
+    color:
+        var(--up-text) !important;
+}
+
+.Select-menu-outer {
+    background:
+        var(--up-surface) !important;
+
+    border-color:
+        var(--up-border) !important;
+}
+
+.Select-option {
+    background:
+        var(--up-surface) !important;
+
+    color:
+        var(--up-text) !important;
+}
+
+.Select-option:hover,
+.Select-option.is-focused {
+    background:
+        var(--up-surface-hover) !important;
+}
+
+.Select-value-label,
+.Select-placeholder {
+    color:
+        var(--up-text) !important;
+}
+
+
+/* =========================================================
+   17. Alerts
+   ========================================================= */
+
+.alert {
+    border-radius:
+        var(--up-radius-md);
+
+    font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   18. Loading state
+   Prepared for future Dash callbacks
+   ========================================================= */
+
+.up-loading-container {
+    position: relative;
+    min-height: 120px;
+}
+
+.up-loading-text {
+    color:
+        var(--up-muted);
+
+    font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   19. Empty states
+   ========================================================= */
+
+.empty-state {
+    padding:
+        40px 24px;
+
+    text-align: center;
+
+    background:
+        var(--up-surface-soft);
+
+    border:
+        1px dashed var(--up-border);
+
+    border-radius:
+        var(--up-radius-lg);
+}
+
+.empty-state-title {
+    color:
+        var(--up-text);
+
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.empty-state-text {
+    margin-top: 6px;
+    margin-bottom: 0;
+
+    color:
+        var(--up-muted);
+
+    font-size: 0.86rem;
+}
+
+
+/* =========================================================
+   20. Dark mode Bootstrap adjustments
+   ========================================================= */
+
+[data-bs-theme="dark"] .card {
+    --bs-card-bg:
+        var(--up-surface);
+
+    --bs-card-border-color:
+        var(--up-border);
+
+    color:
+        var(--up-text);
+}
+
+[data-bs-theme="dark"] .table {
+    --bs-table-color:
+        var(--up-text);
+
+    --bs-table-bg:
+        transparent;
+
+    --bs-table-hover-color:
+        var(--up-text);
+
+    --bs-table-hover-bg:
+        var(--up-surface-hover);
+
+    --bs-table-border-color:
+        var(--up-border-soft);
+}
+
+[data-bs-theme="dark"] .text-secondary {
+    color:
+        var(--up-muted) !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+    background:
+        var(--up-surface) !important;
+}
+
+[data-bs-theme="dark"] hr {
+    border-color:
+        var(--up-border);
+}
+
+
+/* =========================================================
+   21. Scrollbars
+   ========================================================= */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background:
+        var(--up-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background:
+        var(--up-border);
+
+    border-radius:
+        var(--up-radius-pill);
+
+    border:
+        2px solid var(--up-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:
+        var(--up-muted-light);
+}
+
+
+/* =========================================================
+   22. Responsive behaviour
+   ========================================================= */
+
+@media (max-width: 992px) {
+    .page-container {
+        padding:
+            28px 24px 40px;
+    }
+
+    .reason-cell {
+        min-width: 280px;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .urbanpulse-navbar {
+        min-height: 64px;
+    }
+
+    .page-container {
+        padding:
+            20px 16px 32px;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+    }
+
+    .page-description {
+        font-size: 0.9rem;
+    }
+
+    .section-header {
+        margin-top: 30px;
+    }
+
+    .section-title {
+        font-size: 1.12rem;
+    }
+
+    .kpi-value {
+        font-size: 1.6rem;
+    }
+
+    .reason-cell {
+        min-width: 250px;
+    }
+
+    .theme-toggle-label {
+        display: none;
+    }
+
+    .theme-toggle {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+    }
+}
+
+
+@media (max-width: 576px) {
+    .page-kicker {
+        font-size: 0.68rem;
+    }
+
+    .page-title {
+        font-size: 1.65rem;
+    }
+
+    .kpi-card .card-body {
+        padding: 16px;
+    }
+
+    .table > :not(caption) > * > * {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
 }
