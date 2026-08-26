@@ -16,6 +16,15 @@ st.set_page_config(
     layout="wide",
 )
 
+def format_timestamp(value):
+    if value is None or pd.isna(value):
+        return "No data"
+
+    timestamp = pd.to_datetime(value)
+
+    return timestamp.strftime(
+        "%d %b %Y, %H:%M"
+    )
 
 def get_value(
     dataframe,
@@ -222,6 +231,13 @@ try:
         "status_snapshot_at_local",
     ]
 
+    display_status_df[
+        "status_snapshot_at_local"
+    ] = display_status_df[
+        "status_snapshot_at_local"
+    ].apply(
+        format_timestamp
+    )
 
     st.dataframe(
         display_status_df[
@@ -407,11 +423,8 @@ try:
 
     col1.metric(
         "Latest Line Status",
-        (
-            str(latest_line_update)
-            if latest_line_update
-            is not None
-            else "No data"
+        format_timestamp(
+            latest_line_update
         ),
     )
 
