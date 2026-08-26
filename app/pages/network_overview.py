@@ -1,6 +1,5 @@
 import pandas as pd
 import plotly.express as px
-import re
 
 import dash
 import dash_bootstrap_components as dbc
@@ -46,6 +45,10 @@ dash.register_page(
 )
 
 
+# =========================================================
+# Helpers
+# =========================================================
+
 def get_value(
     dataframe,
     column,
@@ -86,62 +89,17 @@ def style_figure(
 
     return figure
 
-def build_disruption_reason(reason):
-    if (
-        reason is None
-        or pd.isna(reason)
-        or not str(reason).strip()
-    ):
-        return html.Div(
-            "No additional information provided.",
-            className="text-secondary small",
-        )
 
-    text = str(reason).strip()
-
-    sentences = [
-        sentence.strip()
-        for sentence in re.split(
-            r"(?<=[.!?])\s+",
-            text,
-        )
-        if sentence.strip()
-    ]
-
-    if not sentences:
-        return html.Div(
-            text,
-            className="text-secondary small",
-        )
-
-    first_sentence = sentences[0]
-    remaining = sentences[1:]
-
-    children = [
-        html.Div(
-            first_sentence,
-            className="disruption-primary",
-        )
-    ]
-
-    if remaining:
-        children.append(
-            html.Ul(
-                [
-                    html.Li(
-                        sentence,
-                        className="mb-2",
-                    )
-                    for sentence in remaining
-                ],
-                className="disruption-details",
-            )
-        )
-
-    return html.Div(children)
+# =========================================================
+# Page
+# =========================================================
 
 def build_layout():
     try:
+        # -------------------------------------------------
+        # Load Gold serving data
+        # -------------------------------------------------
+
         network_df = (
             get_network_summary()
         )
@@ -163,9 +121,9 @@ def build_layout():
         )
 
 
-        # ---------------------------------
-        # KPIs
-        # ---------------------------------
+        # =================================================
+        # Network KPI values
+        # =================================================
 
         total_lines = int(
             get_value(
@@ -199,6 +157,11 @@ def build_layout():
             )
         )
 
+
+        # =================================================
+        # Operational activity values
+        # =================================================
+
         arrival_observations = int(
             get_value(
                 arrival_df,
@@ -226,14 +189,13 @@ def build_layout():
         )
 
 
-        # ---------------------------------
+        # =================================================
         # Current disruptions
-        # ---------------------------------
+        # =================================================
 
         disruption_rows = []
 
         if not status_df.empty:
-
             disrupted_df = (
                 status_df[
                     status_df[
@@ -245,11 +207,18 @@ def build_layout():
                 )
             )
 
-            for _, row in disrupted_df.iterrows():
-
-                service = get_service_style(
-                    row["status_severity"],
-                    row["status_description"],
+            for _, row in (
+                disrupted_df.iterrows()
+            ):
+                service = (
+                    get_service_style(
+                        row[
+                            "status_severity"
+                        ],
+                        row[
+                            "status_description"
+                        ],
+                    )
                 )
 
                 disruption_rows.append(
@@ -257,7 +226,9 @@ def build_layout():
                         [
                             html.Td(
                                 html.Strong(
-                                    row["line_name"]
+                                    row[
+                                        "line_name"
+                                    ]
                                 ),
                                 className=(
                                     "disruption-line-cell"
@@ -275,8 +246,12 @@ def build_layout():
 
                             html.Td(
                                 dbc.Badge(
-                                    service["label"],
-                                    color=service["color"],
+                                    service[
+                                        "label"
+                                    ],
+                                    color=service[
+                                        "color"
+                                    ],
                                     pill=True,
                                     className=(
                                         "status-badge"
@@ -289,7 +264,9 @@ def build_layout():
                                     row[
                                         "status_reason"
                                     ],
-                                    row["line_name"],
+                                    row[
+                                        "line_name"
+                                    ],
                                     expandable=True,
                                 ),
                                 className=(
@@ -301,9 +278,9 @@ def build_layout():
                 )
 
 
-        # ---------------------------------
-        # Trend charts
-        # ---------------------------------
+        # =================================================
+        # Recent trend charts
+        # =================================================
 
         chart_content = dbc.Alert(
             "No recent trend data available.",
@@ -323,10 +300,16 @@ def build_layout():
                 ]
             )
 
-            trends_df = trends_df.sort_values(
-                "calendar_date"
+            trends_df = (
+                trends_df.sort_values(
+                    "calendar_date"
+                )
             )
 
+
+            # ---------------------------------------------
+            # Disruption rate
+            # ---------------------------------------------
 
             disruption_chart_df = (
                 trends_df[
@@ -338,6 +321,27 @@ def build_layout():
                 .dropna()
             )
 
+            disruption_figure = (
+                px.line(
+                    disruption_chart_df,
+                    x="calendar_date",
+                    y=(
+                        "disruption_rate_pct"
+                    ),
+                    markers=True,
+                )
+            )
+
+            style_figure(
+                disruption_figure,
+                "Disruption %",
+            )
+
+
+            # ---------------------------------------------
+            # Arrival activity
+            # ---------------------------------------------
+
             arrival_chart_df = (
                 trends_df[
                     [
@@ -348,24 +352,14 @@ def build_layout():
                 .dropna()
             )
 
-
-            disruption_figure = px.line(
-                disruption_chart_df,
-                x="calendar_date",
-                y="disruption_rate_pct",
-                markers=True,
-            )
-
-            style_figure(
-                disruption_figure,
-                "Disruption %",
-            )
-
-
-            arrival_figure = px.bar(
-                arrival_chart_df,
-                x="calendar_date",
-                y="arrival_observations",
+            arrival_figure = (
+                px.bar(
+                    arrival_chart_df,
+                    x="calendar_date",
+                    y=(
+                        "arrival_observations"
+                    ),
+                )
             )
 
             style_figure(
@@ -381,30 +375,41 @@ def build_layout():
                             dbc.CardBody(
                                 [
                                     html.H5(
-                                        "Disruption Rate",
+                                        (
+                                            "Disruption "
+                                            "Rate"
+                                        ),
                                         className=(
                                             "card-title"
                                         ),
                                     ),
 
                                     dcc.Graph(
-                                        figure=disruption_figure,
+                                        figure=(
+                                            disruption_figure
+                                        ),
                                         config={
-                                            "displayModeBar": False,
-                                            "responsive": False,
+                                            "displayModeBar":
+                                                False,
+                                            "responsive":
+                                                False,
                                         },
                                         responsive=False,
                                         style={
-                                            "height": "300px",
-                                            "width": "100%",
+                                            "height":
+                                                "300px",
+                                            "width":
+                                                "100%",
                                         },
                                     ),
                                 ]
                             ),
                             className=(
-                                "content-card h-100"
+                                "content-card "
+                                "h-100"
                             ),
                         ),
+                        xs=12,
                         lg=6,
                     ),
 
@@ -413,30 +418,41 @@ def build_layout():
                             dbc.CardBody(
                                 [
                                     html.H5(
-                                        "Arrival Activity",
+                                        (
+                                            "Arrival "
+                                            "Activity"
+                                        ),
                                         className=(
                                             "card-title"
                                         ),
                                     ),
 
                                     dcc.Graph(
-                                        figure=arrival_figure,
+                                        figure=(
+                                            arrival_figure
+                                        ),
                                         config={
-                                            "displayModeBar": False,
-                                            "responsive": False,
+                                            "displayModeBar":
+                                                False,
+                                            "responsive":
+                                                False,
                                         },
                                         responsive=False,
                                         style={
-                                            "height": "300px",
-                                            "width": "100%",
+                                            "height":
+                                                "300px",
+                                            "width":
+                                                "100%",
                                         },
                                     ),
                                 ]
                             ),
                             className=(
-                                "content-card h-100"
+                                "content-card "
+                                "h-100"
                             ),
                         ),
+                        xs=12,
                         lg=6,
                     ),
                 ],
@@ -444,9 +460,9 @@ def build_layout():
             )
 
 
-        # ---------------------------------
-        # Freshness
-        # ---------------------------------
+        # =================================================
+        # Data freshness
+        # =================================================
 
         latest_line_update = (
             status_df[
@@ -467,8 +483,16 @@ def build_layout():
         )
 
 
+        # =================================================
+        # Final layout
+        # =================================================
+
         return html.Main(
             [
+                # -----------------------------------------
+                # Header
+                # -----------------------------------------
+
                 build_page_header(
                     "Live Network",
                     "Network Overview",
@@ -479,6 +503,10 @@ def build_layout():
                     ),
                 ),
 
+
+                # =========================================
+                # Network Health
+                # =========================================
 
                 build_section_title(
                     "Network Health",
@@ -497,46 +525,62 @@ def build_layout():
                                 "Lines monitored",
                                 "primary",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
                             build_kpi_card(
                                 "Good Service",
                                 good_lines,
-                                "Operating normally",
+                                (
+                                    "Operating "
+                                    "normally"
+                                ),
                                 "success",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
                             build_kpi_card(
                                 "Disrupted",
                                 disrupted_lines,
-                                "Require attention",
+                                (
+                                    "Require "
+                                    "attention"
+                                ),
                                 "danger",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
                             build_kpi_card(
                                 "Network Health",
-                                f"{good_pct:.1f}%",
+                                (
+                                    f"{good_pct:.1f}%"
+                                ),
                                 "Good service",
                                 "info",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
                     ],
                     className="g-3",
                 ),
 
+
+                # =========================================
+                # Operational Activity
+                # =========================================
 
                 build_section_title(
                     "Operational Activity",
@@ -550,26 +594,40 @@ def build_layout():
                     [
                         dbc.Col(
                             build_kpi_card(
-                                "Arrival Observations",
+                                (
+                                    "Arrival "
+                                    "Observations"
+                                ),
                                 (
                                     f"{arrival_observations:,}"
                                 ),
-                                "Predictions captured",
+                                (
+                                    "Predictions "
+                                    "captured"
+                                ),
                                 "primary",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
                             build_kpi_card(
-                                "Stations Observed",
+                                (
+                                    "Stations "
+                                    "Observed"
+                                ),
                                 stations_observed,
-                                "Stations represented",
+                                (
+                                    "Stations "
+                                    "represented"
+                                ),
                                 "primary",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
@@ -578,11 +636,15 @@ def build_layout():
                                 format_eta(
                                     avg_eta
                                 ),
-                                "Predicted wait",
+                                (
+                                    "Predicted "
+                                    "wait"
+                                ),
                                 "warning",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
 
                         dbc.Col(
@@ -594,16 +656,24 @@ def build_layout():
                                     is not None
                                     else "No data"
                                 ),
-                                "Weather context",
+                                (
+                                    "Weather "
+                                    "context"
+                                ),
                                 "info",
                             ),
+                            xs=12,
+                            sm=6,
                             lg=3,
-                            md=6,
                         ),
                     ],
                     className="g-3",
                 ),
 
+
+                # =========================================
+                # Current Disruptions
+                # =========================================
 
                 build_section_title(
                     "Current Disruptions",
@@ -624,14 +694,23 @@ def build_layout():
                                                 html.Th(
                                                     "Line"
                                                 ),
+
                                                 html.Th(
                                                     "Status"
                                                 ),
+
                                                 html.Th(
-                                                    "Service State"
+                                                    (
+                                                        "Service "
+                                                        "State"
+                                                    )
                                                 ),
+
                                                 html.Th(
-                                                    "Service Impact"
+                                                    (
+                                                        "Service "
+                                                        "Impact"
+                                                    )
                                                 ),
                                             ]
                                         )
@@ -650,19 +729,28 @@ def build_layout():
                                 ),
                             )
                         ),
-                        className="content-card",
+                        className=(
+                            "content-card"
+                        ),
                     )
 
                     if disruption_rows
 
                     else dbc.Alert(
-                        "All monitored Tube lines "
-                        "are currently healthy.",
+                        (
+                            "All monitored Tube "
+                            "lines are currently "
+                            "healthy."
+                        ),
                         color="success",
                         className="mb-0",
                     )
                 ),
 
+
+                # =========================================
+                # Recent Trends
+                # =========================================
 
                 build_section_title(
                     "Recent Trends",
@@ -674,6 +762,10 @@ def build_layout():
 
                 chart_content,
 
+
+                # =========================================
+                # Data Freshness
+                # =========================================
 
                 build_section_title(
                     "Data Freshness",
@@ -694,6 +786,8 @@ def build_layout():
                                 "Latest snapshot",
                                 "primary",
                             ),
+                            xs=12,
+                            md=6,
                             lg=4,
                         ),
 
@@ -703,9 +797,14 @@ def build_layout():
                                 format_date(
                                     arrival_date
                                 ),
-                                "Latest arrival date",
+                                (
+                                    "Latest "
+                                    "arrival date"
+                                ),
                                 "primary",
                             ),
+                            xs=12,
+                            md=6,
                             lg=4,
                         ),
 
@@ -715,9 +814,14 @@ def build_layout():
                                 format_date(
                                     weather_date
                                 ),
-                                "Latest weather date",
+                                (
+                                    "Latest "
+                                    "weather date"
+                                ),
                                 "primary",
                             ),
+                            xs=12,
+                            md=6,
                             lg=4,
                         ),
                     ],
@@ -733,8 +837,10 @@ def build_layout():
             dbc.Alert(
                 [
                     html.H4(
-                        "Unable to load "
-                        "Network Overview",
+                        (
+                            "Unable to load "
+                            "Network Overview"
+                        ),
                         className=(
                             "alert-heading"
                         ),

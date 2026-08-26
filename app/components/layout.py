@@ -4,51 +4,39 @@ from dash import html
 
 
 def build_navbar():
-    return dbc.Navbar(
-        dbc.Container(
-            [
-                dbc.NavbarBrand(
-                    "UrbanPulse",
+    return dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(
+                dbc.NavLink(
+                    "Network Overview",
                     href="/",
-                    className=(
-                        "brand-title "
-                        "text-white fs-4"
-                    ),
-                ),
+                    active="exact",
+                )
+            ),
 
-                dbc.Nav(
-                    [
-                        dbc.NavLink(
-                            "Network Overview",
-                            href="/",
-                            active="exact",
-                        ),
+            dbc.NavItem(
+                dbc.NavLink(
+                    "Line Status",
+                    href="/line-status",
+                    active="exact",
+                )
+            ),
 
-                        dbc.NavLink(
-                            "Line Status",
-                            href="/line-status",
-                            active="exact",
-                        ),
-
-                        dbc.NavLink(
-                            "Station Arrivals",
-                            href="/station-arrivals",
-                            active="exact",
-                        ),
-                        
-                    ],
-                    navbar=True,
-                    className="ms-auto",
-                ),
-            ],
-            fluid=True,
-        ),
-        className=(
-            "urbanpulse-navbar "
-            "navbar-dark"
-        ),
+            dbc.NavItem(
+                dbc.NavLink(
+                    "Station Arrivals",
+                    href="/station-arrivals",
+                    active="exact",
+                )
+            ),
+        ],
+        brand="UrbanPulse",
+        brand_href="/",
+        color="dark",
+        dark=True,
+        expand="lg",
+        className="urbanpulse-navbar",
     )
-
 
 def build_page_header(
     kicker,

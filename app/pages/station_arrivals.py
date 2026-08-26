@@ -46,6 +46,20 @@ ALL_LINES = "__ALL_LINES__"
 # =========================================================
 # Helpers
 # =========================================================
+def shorten_station_name(value):
+    name = str(value)
+
+    return (
+        name
+        .replace(
+            " Underground Station",
+            "",
+        )
+        .replace(
+            " Underground",
+            "",
+        )
+    )
 
 def serialise_dataframe(dataframe):
     result = dataframe.copy()
@@ -412,30 +426,23 @@ def build_arrival_content(
     # Arrival activity chart
     # -----------------------------------------------------
 
-    chart_df = (
-        dataframe[
-            [
-                "station_name",
-                "line_name",
-                "arrival_observations",
-            ]
-        ]
-        .copy()
-        .sort_values(
-            "arrival_observations",
-            ascending=True,
-        )
+    chart_df[
+        "station_display_name"
+    ] = chart_df[
+        "station_name"
+    ].apply(
+        shorten_station_name
     )
 
     figure = px.bar(
         chart_df,
         x="arrival_observations",
-        y="station_name",
+        y="station_display_name",
         color="line_name",
         orientation="h",
         barmode="group",
         labels={
-            "station_name":
+            "station_display_name":
                 "Station",
 
             "arrival_observations":
