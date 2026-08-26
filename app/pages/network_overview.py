@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import re
 
 import dash
 import dash_bootstrap_components as dbc
@@ -65,13 +66,14 @@ def style_figure(
 ):
     figure.update_layout(
         template="plotly_white",
+        height=300,
+        autosize=False,
         margin=dict(
             l=20,
             r=20,
             t=20,
             b=20,
         ),
-        height=300,
         showlegend=False,
         hovermode="x unified",
         xaxis_title=None,
@@ -80,6 +82,59 @@ def style_figure(
 
     return figure
 
+def build_disruption_reason(reason):
+    if (
+        reason is None
+        or pd.isna(reason)
+        or not str(reason).strip()
+    ):
+        return html.Div(
+            "No additional information provided.",
+            className="text-secondary small",
+        )
+
+    text = str(reason).strip()
+
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(
+            r"(?<=[.!?])\s+",
+            text,
+        )
+        if sentence.strip()
+    ]
+
+    if not sentences:
+        return html.Div(
+            text,
+            className="text-secondary small",
+        )
+
+    first_sentence = sentences[0]
+    remaining = sentences[1:]
+
+    children = [
+        html.Div(
+            first_sentence,
+            className="disruption-primary",
+        )
+    ]
+
+    if remaining:
+        children.append(
+            html.Ul(
+                [
+                    html.Li(
+                        sentence,
+                        className="mb-2",
+                    )
+                    for sentence in remaining
+                ],
+                className="disruption-details",
+            )
+        )
+
+    return html.Div(children)
 
 def build_layout():
     try:
@@ -205,60 +260,53 @@ def build_layout():
                     )
 
                 disruption_cards.append(
-                    dbc.Card(
-                        dbc.CardBody(
-                            [
-                                html.Div(
-                                    [
-                                        html.Strong(
-                                            row[
-                                                "line_name"
-                                            ],
-                                            className=(
-                                                "me-2"
+                    dbc.CardBody(
+                        [
+                            html.Div(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Div(
+                                                row["line_name"],
+                                                className="disruption-line-name",
                                             ),
-                                        ),
 
-                                        dbc.Badge(
-                                            service[
-                                                "label"
-                                            ],
-                                            color=service[
-                                                "color"
-                                            ],
-                                            pill=True,
-                                        ),
-                                    ],
-                                    className=(
-                                        "d-flex "
-                                        "justify-content-"
-                                        "between "
-                                        "align-items-center"
+                                            html.Div(
+                                                row["status_description"],
+                                                className="disruption-status-text",
+                                            ),
+                                        ]
                                     ),
-                                ),
 
-                                html.Div(
-                                    row[
-                                        "status_description"
-                                    ],
-                                    className=(
-                                        "fw-semibold mt-3"
+                                    dbc.Badge(
+                                        service["label"],
+                                        color=service["color"],
+                                        pill=True,
+                                        className="status-badge",
                                     ),
+                                ],
+                                className=(
+                                    "d-flex "
+                                    "justify-content-between "
+                                    "align-items-start "
+                                    "gap-3"
                                 ),
+                            ),
 
-                                html.Div(
-                                    reason,
-                                    className=(
-                                        "text-secondary "
-                                        "small mt-1"
-                                    ),
-                                ),
-                            ]
-                        ),
-                        className=(
-                            "content-card mb-3"
-                        ),
-                    )
+                            html.Hr(
+                                className="disruption-divider"
+                            ),
+
+                            html.Div(
+                                "Service impact",
+                                className="disruption-label",
+                            ),
+
+                            build_disruption_reason(
+                                reason
+                            ),
+                        ]
+                    ),
                 )
 
         if not disruption_cards:
@@ -359,12 +407,15 @@ def build_layout():
                                     ),
 
                                     dcc.Graph(
-                                        figure=(
-                                            disruption_figure
-                                        ),
+                                        figure=disruption_figure,
                                         config={
-                                            "displayModeBar":
-                                                False
+                                            "displayModeBar": False,
+                                            "responsive": False,
+                                        },
+                                        responsive=False,
+                                        style={
+                                            "height": "300px",
+                                            "width": "100%",
                                         },
                                     ),
                                 ]
@@ -388,12 +439,15 @@ def build_layout():
                                     ),
 
                                     dcc.Graph(
-                                        figure=(
-                                            arrival_figure
-                                        ),
+                                        figure=arrival_figure,
                                         config={
-                                            "displayModeBar":
-                                                False
+                                            "displayModeBar": False,
+                                            "responsive": False,
+                                        },
+                                        responsive=False,
+                                        style={
+                                            "height": "300px",
+                                            "width": "100%",
                                         },
                                     ),
                                 ]
