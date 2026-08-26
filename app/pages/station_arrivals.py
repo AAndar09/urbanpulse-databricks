@@ -7,9 +7,11 @@ import dash_bootstrap_components as dbc
 from dash import (
     Input,
     Output,
+    State,
     callback,
     dcc,
     html,
+    no_update,
 )
 
 from components.formatting import (
@@ -147,10 +149,21 @@ def get_latest_prediction(dataframe):
     return timestamps.max()
 
 
-def style_figure(figure):
+def style_figure(
+    figure,
+    row_count,
+):
+    chart_height = max(
+        320,
+        min(
+            650,
+            90 + (row_count * 45),
+        ),
+    )
+
     figure.update_layout(
         template="plotly_white",
-        height=320,
+        height=chart_height,
         autosize=False,
         margin=dict(
             l=20,
@@ -158,14 +171,23 @@ def style_figure(figure):
             t=20,
             b=20,
         ),
-        xaxis_title=None,
-        yaxis_title="Arrival Observations",
-        legend_title_text="Line",
-        hovermode="x unified",
+        xaxis_title="Arrival Observations",
+        yaxis_title=None,
+        legend_title_text="Tube Line",
+        hovermode="closest",
+        bargap=0.25,
+    )
+
+    figure.update_yaxes(
+        automargin=True,
+    )
+
+    figure.update_xaxes(
+        rangemode="tozero",
+        gridcolor="#e2e8f0",
     )
 
     return figure
-
 
 # ---------------------------------------------------------
 # Initial data
@@ -275,8 +297,9 @@ def build_layout():
                 build_section_title(
                     "Explore Arrivals",
                     (
-                        "Filter the latest serving data "
-                        "by station or Tube line."
+                        "Choose a station or Tube line. "
+                        "Available options automatically adjust "
+                        "to valid station-line combinations."
                     ),
                 ),
 
@@ -397,8 +420,12 @@ layout = build_layout
 
 @callback(
     Output(
-        "station-arrivals-content",
-        "children",
+        "arrival-station-filter",
+        "options",
+    ),
+    Output(
+        "arrival-line-filter",
+        "options",
     ),
     Input(
         "arrival-station-filter",
@@ -408,11 +435,131 @@ layout = build_layout
         "arrival-line-filter",
         "value",
     ),
-    Input(
+    State(
         "station-arrivals-data",
         "data",
     ),
 )
+def update_filter_options(
+    selected_station,
+    selected_line,
+    stored_data,
+):
+    if not stored_data:
+        return [], []
+
+
+    dataframe = pd.DataFrame(
+        stored_data
+    )
+
+
+    # -------------------------------------
+    # Station options
+    # -------------------------------------
+
+    station_df = dataframe.copy()
+
+    if selected_line:
+        station_df = station_df[
+            station_df[
+                "line_id"
+            ] == selected_line
+        ]
+
+
+    valid_station_ids = set(
+        station_df[
+            "station_id"
+        ]
+        .dropna()
+        .unique()
+    )
+
+
+    station_options = [
+        {
+            "label": name,
+            "value": station_id,
+            "disabled": (
+                station_id
+                not in valid_station_ids
+            ),
+        }
+        for station_id, name in (
+            dataframe[
+                [
+                    "station_id",
+                    "station_name",
+                ]
+            ]
+            .drop_duplicates()
+            .sort_values(
+                "station_name"
+            )
+            .itertuples(
+                index=False,
+                name=None,
+            )
+        )
+    ]
+
+
+    # -------------------------------------
+    # Line options
+    # -------------------------------------
+
+    line_df = dataframe.copy()
+
+    if selected_station:
+        line_df = line_df[
+            line_df[
+                "station_id"
+            ] == selected_station
+        ]
+
+
+    valid_line_ids = set(
+        line_df[
+            "line_id"
+        ]
+        .dropna()
+        .unique()
+    )
+
+
+    line_options = [
+        {
+            "label": name,
+            "value": line_id,
+            "disabled": (
+                line_id
+                not in valid_line_ids
+            ),
+        }
+        for line_id, name in (
+            dataframe[
+                [
+                    "line_id",
+                    "line_name",
+                ]
+            ]
+            .drop_duplicates()
+            .sort_values(
+                "line_name"
+            )
+            .itertuples(
+                index=False,
+                name=None,
+            )
+        )
+    ]
+
+
+    return (
+        station_options,
+        line_options,
+    )
 def update_station_arrivals(
     selected_station,
     selected_line,
@@ -539,22 +686,45 @@ def update_station_arrivals(
     )
 
 
+    chart_df = (
+    dataframe[
+        [
+            "station_name",
+            "line_name",
+            "arrival_observations",
+        ]
+    ]
+    .copy()
+    .sort_values(
+        "arrival_observations",
+        ascending=True,
+    )
+)
+
+
     figure = px.bar(
         chart_df,
-        x="station_name",
-        y="arrival_observations",
+        x="arrival_observations",
+        y="station_name",
         color="line_name",
+        orientation="h",
         barmode="group",
         labels={
             "station_name": "Station",
             "arrival_observations":
                 "Arrival Observations",
-            "line_name": "Line",
+            "line_name": "Tube Line",
+        },
+        hover_data={
+            "station_name": True,
+            "line_name": True,
+            "arrival_observations": True,
         },
     )
 
     style_figure(
-        figure
+        figure,
+        len(chart_df),
     )
 
 
@@ -832,7 +1002,6 @@ def update_station_arrivals(
                         },
                         responsive=False,
                         style={
-                            "height": "320px",
                             "width": "100%",
                         },
                     )
