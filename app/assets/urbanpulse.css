@@ -1,0 +1,112 @@
+:root {
+    --up-navy: #0f172a;
+    --up-blue: #2563eb;
+    --up-bg: #f8fafc;
+    --up-border: #e2e8f0;
+    --up-muted: #64748b;
+}
+
+body {
+    background: var(--up-bg);
+    color: var(--up-navy);
+}
+
+.urbanpulse-navbar {
+    background: linear-gradient(
+        90deg,
+        #0f172a,
+        #172554
+    );
+    min-height: 72px;
+}
+
+.brand-title {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.page-container {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+.page-kicker {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1e40af;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.page-title {
+    margin-top: 12px;
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+}
+
+.page-description {
+    color: var(--up-muted);
+    max-width: 750px;
+}
+
+.section-title {
+    margin-top: 32px;
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+    font-weight: 750;
+}
+
+.kpi-card {
+    border: 1px solid var(--up-border);
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(
+        15,
+        23,
+        42,
+        0.05
+    );
+    height: 100%;
+}
+
+.kpi-label {
+    color: var(--up-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.kpi-value {
+    margin-top: 8px;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.content-card {
+    border: 1px solid var(--up-border);
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(
+        15,
+        23,
+        42,
+        0.04
+    );
+}
+
+.status-badge {
+    padding: 7px 11px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.table > :not(caption) > * > * {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    vertical-align: middle;
+}
