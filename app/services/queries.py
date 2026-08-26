@@ -1,22 +1,27 @@
 import os
 
+import pandas as pd
+
 from services.databricks_sql import (
     get_connection,
 )
 
 
 def run_query(query: str):
-
     with get_connection() as connection:
-
         with connection.cursor() as cursor:
-
             cursor.execute(query)
 
-            return (
-                cursor
-                .fetchall_arrow()
-                .to_pandas()
+            rows = cursor.fetchall()
+
+            columns = [
+                column[0]
+                for column in cursor.description
+            ]
+
+            return pd.DataFrame(
+                rows,
+                columns=columns,
             )
 
 
