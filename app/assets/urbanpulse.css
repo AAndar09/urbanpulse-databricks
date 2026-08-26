@@ -231,3 +231,69 @@ body {
     font-size: 0.88rem;
     line-height: 1.5;
 }
+
+.reason-cell {
+    min-width: 320px;
+    max-width: 600px;
+}
+
+.reason-primary {
+    color: #334155;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.reason-summary {
+    color: #2563eb;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+}
+
+.reason-summary:hover {
+    color: #1d4ed8;
+}
+
+.reason-list {
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding-left: 20px;
+    color: #64748b;
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+
+.reason-list li {
+    margin-bottom: 6px;
+}
+
+.disruption-table thead th {
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.disruption-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.disruption-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.disruption-line-cell {
+    min-width: 130px;
+    color: #0f172a;
+}
+
+.disruption-status-cell {
+    min-width: 140px;
+    font-weight: 600;
+    color: #334155;
+}

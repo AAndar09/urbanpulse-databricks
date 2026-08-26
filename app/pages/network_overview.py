@@ -10,6 +10,10 @@ from dash import (
     html,
 )
 
+from components.disruptions import (
+    build_reason_content,
+)
+
 from components.formatting import (
     format_date,
     format_eta,
@@ -226,98 +230,75 @@ def build_layout():
         # Current disruptions
         # ---------------------------------
 
-        disruption_cards = []
+        disruption_rows = []
 
         if not status_df.empty:
-            disrupted_df = status_df[
+
+            disrupted_df = (
                 status_df[
-                    "is_disrupted"
-                ] == True
-            ]
+                    status_df[
+                        "is_disrupted"
+                    ] == True
+                ]
+                .sort_values(
+                    "line_name"
+                )
+            )
 
-            for _, row in (
-                disrupted_df.iterrows()
-            ):
-                service = (
-                    get_service_style(
-                        row[
-                            "status_severity"
-                        ],
-                        row[
-                            "status_description"
-                        ],
-                    )
+            for _, row in disrupted_df.iterrows():
+
+                service = get_service_style(
+                    row["status_severity"],
+                    row["status_description"],
                 )
 
-                reason = (
-                    row["status_reason"]
-                )
-
-                if pd.isna(reason):
-                    reason = (
-                        "No additional "
-                        "information provided."
-                    )
-
-                disruption_cards.append(
-                    dbc.CardBody(
+                disruption_rows.append(
+                    html.Tr(
                         [
-                            html.Div(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Div(
-                                                row["line_name"],
-                                                className="disruption-line-name",
-                                            ),
-
-                                            html.Div(
-                                                row["status_description"],
-                                                className="disruption-status-text",
-                                            ),
-                                        ]
-                                    ),
-
-                                    dbc.Badge(
-                                        service["label"],
-                                        color=service["color"],
-                                        pill=True,
-                                        className="status-badge",
-                                    ),
-                                ],
+                            html.Td(
+                                html.Strong(
+                                    row["line_name"]
+                                ),
                                 className=(
-                                    "d-flex "
-                                    "justify-content-between "
-                                    "align-items-start "
-                                    "gap-3"
+                                    "disruption-line-cell"
                                 ),
                             ),
 
-                            html.Hr(
-                                className="disruption-divider"
+                            html.Td(
+                                row[
+                                    "status_description"
+                                ],
+                                className=(
+                                    "disruption-status-cell"
+                                ),
                             ),
 
-                            html.Div(
-                                "Service impact",
-                                className="disruption-label",
+                            html.Td(
+                                dbc.Badge(
+                                    service["label"],
+                                    color=service["color"],
+                                    pill=True,
+                                    className=(
+                                        "status-badge"
+                                    ),
+                                )
                             ),
 
-                            build_disruption_reason(
-                                reason
+                            html.Td(
+                                build_reason_content(
+                                    row[
+                                        "status_reason"
+                                    ],
+                                    row["line_name"],
+                                    expandable=True,
+                                ),
+                                className=(
+                                    "reason-cell"
+                                ),
                             ),
                         ]
-                    ),
+                    )
                 )
-
-        if not disruption_cards:
-            disruption_cards = [
-                dbc.Alert(
-                    "All monitored Tube lines "
-                    "are currently healthy.",
-                    color="success",
-                    className="mb-0",
-                )
-            ]
 
 
         # ---------------------------------
@@ -632,8 +613,54 @@ def build_layout():
                     ),
                 ),
 
-                html.Div(
-                    disruption_cards
+                (
+                    dbc.Card(
+                        dbc.CardBody(
+                            dbc.Table(
+                                [
+                                    html.Thead(
+                                        html.Tr(
+                                            [
+                                                html.Th(
+                                                    "Line"
+                                                ),
+                                                html.Th(
+                                                    "Status"
+                                                ),
+                                                html.Th(
+                                                    "Service State"
+                                                ),
+                                                html.Th(
+                                                    "Service Impact"
+                                                ),
+                                            ]
+                                        )
+                                    ),
+
+                                    html.Tbody(
+                                        disruption_rows
+                                    ),
+                                ],
+                                hover=True,
+                                responsive=True,
+                                borderless=True,
+                                className=(
+                                    "mb-0 "
+                                    "disruption-table"
+                                ),
+                            )
+                        ),
+                        className="content-card",
+                    )
+
+                    if disruption_rows
+
+                    else dbc.Alert(
+                        "All monitored Tube lines "
+                        "are currently healthy.",
+                        color="success",
+                        className="mb-0",
+                    )
                 ),
 
 

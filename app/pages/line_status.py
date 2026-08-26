@@ -9,6 +9,10 @@ from components.formatting import (
     format_timestamp,
 )
 
+from components.disruptions import (
+    build_reason_content,
+)
+
 from components.layout import (
     build_page_header,
     build_section_title,
@@ -56,10 +60,6 @@ def build_layout():
                 row["status_reason"]
             )
 
-            if pd.isna(reason):
-                reason = "No additional information"
-
-
             rows.append(
                 html.Tr(
                     [
@@ -93,7 +93,12 @@ def build_layout():
                         ),
 
                         html.Td(
-                            reason
+                            build_reason_content(
+                                reason,
+                                row["line_name"],
+                                expandable=True,
+                            ),
+                            className="reason-cell",
                         ),
 
                         html.Td(
