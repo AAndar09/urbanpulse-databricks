@@ -9,9 +9,16 @@ config = Config()
 
 def get_connection():
 
-    warehouse_id = os.environ[
+    warehouse_id = os.getenv(
         "DATABRICKS_WAREHOUSE_ID"
-    ]
+    )
+
+    if not warehouse_id:
+        raise RuntimeError(
+            "DATABRICKS_WAREHOUSE_ID is not configured. "
+            "Check the SQL warehouse App resource key "
+            "and app.yaml."
+        )
 
     server_hostname = config.host
 
