@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 from dash import (
     Input,
     Output,
+    State,
     callback,
     dcc,
     html,
@@ -46,20 +47,6 @@ ALL_LINES = "__ALL_LINES__"
 # =========================================================
 # Helpers
 # =========================================================
-def shorten_station_name(value):
-    name = str(value)
-
-    return (
-        name
-        .replace(
-            " Underground Station",
-            "",
-        )
-        .replace(
-            " Underground",
-            "",
-        )
-    )
 
 def serialise_dataframe(dataframe):
     result = dataframe.copy()
@@ -129,10 +116,7 @@ def weighted_average_eta(dataframe):
         weights
     ).sum()
 
-    return (
-        weighted_total
-        / weight_total
-    )
+    return weighted_total / weight_total
 
 
 def get_next_arrival(dataframe):
@@ -144,9 +128,7 @@ def get_next_arrival(dataframe):
             "next_expected_arrival_local"
         ],
         errors="coerce",
-    )
-
-    timestamps = timestamps.dropna()
+    ).dropna()
 
     if timestamps.empty:
         return None
@@ -163,14 +145,26 @@ def get_latest_prediction(dataframe):
             "latest_prediction_timestamp_local"
         ],
         errors="coerce",
-    )
-
-    timestamps = timestamps.dropna()
+    ).dropna()
 
     if timestamps.empty:
         return None
 
     return timestamps.max()
+
+
+def shorten_station_name(value):
+    return (
+        str(value)
+        .replace(
+            " Underground Station",
+            "",
+        )
+        .replace(
+            " Underground",
+            "",
+        )
+    )
 
 
 def style_figure(
@@ -220,25 +214,7 @@ def style_figure(
 
 def build_station_options(
     dataframe,
-    selected_line=None,
 ):
-    valid_df = dataframe.copy()
-
-    if selected_line:
-        valid_df = valid_df[
-            valid_df[
-                "line_id"
-            ] == selected_line
-        ]
-
-    valid_station_ids = set(
-        valid_df[
-            "station_id"
-        ]
-        .dropna()
-        .unique()
-    )
-
     station_records = (
         dataframe[
             [
@@ -270,10 +246,6 @@ def build_station_options(
             {
                 "label": station_name,
                 "value": station_id,
-                "disabled": (
-                    station_id
-                    not in valid_station_ids
-                ),
             }
         )
 
@@ -284,25 +256,21 @@ def build_line_options(
     dataframe,
     selected_station=None,
 ):
-    valid_df = dataframe.copy()
+    filtered_df = dataframe.copy()
 
-    if selected_station:
-        valid_df = valid_df[
-            valid_df[
+    if (
+        selected_station
+        and selected_station
+        != ALL_STATIONS
+    ):
+        filtered_df = filtered_df[
+            filtered_df[
                 "station_id"
             ] == selected_station
         ]
 
-    valid_line_ids = set(
-        valid_df[
-            "line_id"
-        ]
-        .dropna()
-        .unique()
-    )
-
     line_records = (
-        dataframe[
+        filtered_df[
             [
                 "line_id",
                 "line_name",
@@ -332,10 +300,6 @@ def build_line_options(
             {
                 "label": line_name,
                 "value": line_id,
-                "disabled": (
-                    line_id
-                    not in valid_line_ids
-                ),
             }
         )
 
@@ -343,7 +307,7 @@ def build_line_options(
 
 
 # =========================================================
-# Dynamic dashboard content
+# Dashboard content
 # =========================================================
 
 def build_arrival_content(
@@ -388,7 +352,7 @@ def build_arrival_content(
 
 
     # -----------------------------------------------------
-    # KPI calculations
+    # KPIs
     # -----------------------------------------------------
 
     service_count = len(
@@ -423,8 +387,23 @@ def build_arrival_content(
 
 
     # -----------------------------------------------------
-    # Arrival activity chart
+    # Chart
     # -----------------------------------------------------
+
+    chart_df = (
+        dataframe[
+            [
+                "station_name",
+                "line_name",
+                "arrival_observations",
+            ]
+        ]
+        .copy()
+        .sort_values(
+            "arrival_observations",
+            ascending=True,
+        )
+    )
 
     chart_df[
         "station_display_name"
@@ -465,24 +444,20 @@ def build_arrival_content(
 
 
     # -----------------------------------------------------
-    # Detailed table
+    # Detail table
     # -----------------------------------------------------
 
     table_rows = []
 
-    table_df = (
-        dataframe
-        .sort_values(
-            [
-                "station_name",
-                "line_name",
-            ]
-        )
+    table_df = dataframe.sort_values(
+        [
+            "station_name",
+            "line_name",
+        ]
     )
 
-    for _, row in (
-        table_df.iterrows()
-    ):
+    for _, row in table_df.iterrows():
+
         arrival_count = (
             int(
                 row[
@@ -579,43 +554,32 @@ def build_arrival_content(
             )
         )
 
+
     table = dbc.Table(
         [
             html.Thead(
                 html.Tr(
                     [
-                        html.Th(
-                            "Station"
-                        ),
-
-                        html.Th(
-                            "Line"
-                        ),
-
+                        html.Th("Station"),
+                        html.Th("Line"),
                         html.Th(
                             "Observations"
                         ),
-
                         html.Th(
                             "Vehicles"
                         ),
-
                         html.Th(
                             "Avg ETA"
                         ),
-
                         html.Th(
                             "Min ETA"
                         ),
-
                         html.Th(
                             "Max ETA"
                         ),
-
                         html.Th(
                             "Next Expected"
                         ),
-
                         html.Th(
                             "Latest Prediction"
                         ),
@@ -662,8 +626,9 @@ def build_arrival_content(
                             ),
                             "primary",
                         ),
+                        xs=12,
+                        sm=6,
                         lg=3,
-                        md=6,
                     ),
 
                     dbc.Col(
@@ -677,8 +642,9 @@ def build_arrival_content(
                             ),
                             "primary",
                         ),
+                        xs=12,
+                        sm=6,
                         lg=3,
-                        md=6,
                     ),
 
                     dbc.Col(
@@ -692,8 +658,9 @@ def build_arrival_content(
                             ),
                             "warning",
                         ),
+                        xs=12,
+                        sm=6,
                         lg=3,
-                        md=6,
                     ),
 
                     dbc.Col(
@@ -707,8 +674,9 @@ def build_arrival_content(
                             ),
                             "success",
                         ),
+                        xs=12,
+                        sm=6,
                         lg=3,
-                        md=6,
                     ),
                 ],
                 className="g-3",
@@ -738,10 +706,6 @@ def build_arrival_content(
             ),
 
 
-            # -------------------------------------------------
-            # Chart
-            # -------------------------------------------------
-
             build_section_title(
                 "Arrival Activity",
                 (
@@ -757,7 +721,6 @@ def build_arrival_content(
                         config={
                             "displayModeBar":
                                 False,
-
                             "responsive":
                                 False,
                         },
@@ -770,10 +733,6 @@ def build_arrival_content(
                 className="content-card",
             ),
 
-
-            # -------------------------------------------------
-            # Table
-            # -------------------------------------------------
 
             build_section_title(
                 "Station and Line Detail",
@@ -830,25 +789,8 @@ def build_layout():
             )
 
 
-        station_options = (
-            build_station_options(
-                arrivals_df
-            )
-        )
-
-        line_options = (
-            build_line_options(
-                arrivals_df
-            )
-        )
-
-
         return html.Main(
             [
-                # -----------------------------------------
-                # Local cached page data
-                # -----------------------------------------
-
                 dcc.Store(
                     id="station-arrivals-data",
                     data=serialise_dataframe(
@@ -856,10 +798,6 @@ def build_layout():
                     ),
                 ),
 
-
-                # -----------------------------------------
-                # Header
-                # -----------------------------------------
 
                 build_page_header(
                     "Operations",
@@ -872,19 +810,15 @@ def build_layout():
                 ),
 
 
-                # -----------------------------------------
-                # Filters
-                # -----------------------------------------
-
                 build_section_title(
                     "Explore Arrivals",
                     (
-                        "Choose a station or Tube line. "
-                        "Available options automatically "
-                        "adjust to valid station-line "
-                        "combinations."
+                        "Choose a station first to "
+                        "limit Tube Line options to "
+                        "valid station-line combinations."
                     ),
                 ),
+
 
                 dbc.Card(
                     dbc.CardBody(
@@ -894,10 +828,6 @@ def build_layout():
                                     [
                                         dbc.Label(
                                             "Station",
-                                            html_for=(
-                                                "arrival-"
-                                                "station-filter"
-                                            ),
                                         ),
 
                                         dcc.Dropdown(
@@ -906,19 +836,18 @@ def build_layout():
                                                 "station-filter"
                                             ),
                                             options=(
-                                                station_options
+                                                build_station_options(
+                                                    arrivals_df
+                                                )
                                             ),
                                             value=(
                                                 ALL_STATIONS
                                             ),
                                             clearable=False,
                                             searchable=True,
-                                            persistence=True,
-                                            persistence_type=(
-                                                "session"
-                                            ),
                                         ),
                                     ],
+                                    xs=12,
                                     lg=6,
                                 ),
 
@@ -926,10 +855,6 @@ def build_layout():
                                     [
                                         dbc.Label(
                                             "Tube Line",
-                                            html_for=(
-                                                "arrival-"
-                                                "line-filter"
-                                            ),
                                         ),
 
                                         dcc.Dropdown(
@@ -938,19 +863,18 @@ def build_layout():
                                                 "line-filter"
                                             ),
                                             options=(
-                                                line_options
+                                                build_line_options(
+                                                    arrivals_df
+                                                )
                                             ),
                                             value=(
                                                 ALL_LINES
                                             ),
                                             clearable=False,
                                             searchable=True,
-                                            persistence=True,
-                                            persistence_type=(
-                                                "session"
-                                            ),
                                         ),
                                     ],
+                                    xs=12,
                                     lg=6,
                                 ),
                             ],
@@ -964,14 +888,7 @@ def build_layout():
                 ),
 
 
-                # -----------------------------------------
-                # Dynamic dashboard
-                # -----------------------------------------
-
                 dcc.Loading(
-                    id=(
-                        "station-arrivals-loading"
-                    ),
                     type="circle",
                     children=html.Div(
                         id=(
@@ -1012,20 +929,80 @@ layout = build_layout
 
 
 # =========================================================
-# Coordinated filters + dashboard callback
+# Station -> Line options
 # =========================================================
 
 @callback(
-    Output(
-        "arrival-station-filter",
-        "options",
-    ),
-
     Output(
         "arrival-line-filter",
         "options",
     ),
 
+    Output(
+        "arrival-line-filter",
+        "value",
+    ),
+
+    Input(
+        "arrival-station-filter",
+        "value",
+    ),
+
+    State(
+        "arrival-line-filter",
+        "value",
+    ),
+
+    State(
+        "station-arrivals-data",
+        "data",
+    ),
+)
+def update_line_options(
+    selected_station,
+    current_line,
+    stored_data,
+):
+    if not stored_data:
+        return (
+            [
+                {
+                    "label": "All lines",
+                    "value": ALL_LINES,
+                }
+            ],
+            ALL_LINES,
+        )
+
+
+    dataframe = pd.DataFrame(
+        stored_data
+    )
+
+    options = build_line_options(
+        dataframe,
+        selected_station,
+    )
+
+    valid_values = {
+        option["value"]
+        for option in options
+    }
+
+    if current_line not in valid_values:
+        current_line = ALL_LINES
+
+    return (
+        options,
+        current_line,
+    )
+
+
+# =========================================================
+# Dashboard filtering
+# =========================================================
+
+@callback(
     Output(
         "station-arrivals-content",
         "children",
@@ -1052,28 +1029,12 @@ def update_station_arrivals(
     stored_data,
 ):
     if not stored_data:
-        return (
-            [
-                {
-                    "label": "All stations",
-                    "value": ALL_STATIONS,
-                }
-            ],
-
-            [
-                {
-                    "label": "All lines",
-                    "value": ALL_LINES,
-                }
-            ],
-
-            dbc.Alert(
-                (
-                    "No station arrival "
-                    "data is available."
-                ),
-                color="warning",
+        return dbc.Alert(
+            (
+                "No station arrival "
+                "data is available."
             ),
+            color="warning",
         )
 
 
@@ -1082,103 +1043,30 @@ def update_station_arrivals(
     )
 
 
-    # -----------------------------------------------------
-    # Normalise selections
-    # -----------------------------------------------------
-
-    station_filter = (
-        None
-        if (
-            selected_station
-            in (
-                None,
-                ALL_STATIONS,
-            )
-        )
-        else selected_station
-    )
-
-    line_filter = (
-        None
-        if (
-            selected_line
-            in (
-                None,
-                ALL_LINES,
-            )
-        )
-        else selected_line
-    )
+    if (
+        selected_station
+        and selected_station
+        != ALL_STATIONS
+    ):
+        dataframe = dataframe[
+            dataframe[
+                "station_id"
+            ] == selected_station
+        ]
 
 
-    # -----------------------------------------------------
-    # Update valid station options
-    # -----------------------------------------------------
-
-    station_options = (
-        build_station_options(
-            dataframe,
-            selected_line=(
-                line_filter
-            ),
-        )
-    )
+    if (
+        selected_line
+        and selected_line
+        != ALL_LINES
+    ):
+        dataframe = dataframe[
+            dataframe[
+                "line_id"
+            ] == selected_line
+        ]
 
 
-    # -----------------------------------------------------
-    # Update valid line options
-    # -----------------------------------------------------
-
-    line_options = (
-        build_line_options(
-            dataframe,
-            selected_station=(
-                station_filter
-            ),
-        )
-    )
-
-
-    # -----------------------------------------------------
-    # Filter dashboard data
-    # -----------------------------------------------------
-
-    filtered_df = (
-        dataframe.copy()
-    )
-
-    if station_filter:
-        filtered_df = (
-            filtered_df[
-                filtered_df[
-                    "station_id"
-                ] == station_filter
-            ]
-        )
-
-    if line_filter:
-        filtered_df = (
-            filtered_df[
-                filtered_df[
-                    "line_id"
-                ] == line_filter
-            ]
-        )
-
-
-    # -----------------------------------------------------
-    # Build dynamic dashboard
-    # -----------------------------------------------------
-
-    content = (
-        build_arrival_content(
-            filtered_df
-        )
-    )
-
-
-    return (
-        station_options,
-        line_options,
-        content,
+    return build_arrival_content(
+        dataframe
     )
