@@ -1,0 +1,23 @@
+command:
+  - streamlit
+  - run
+  - app.py
+
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql_warehouse
+
+  - name: CURRENT_LINE_STATUS_TABLE
+    valueFrom: current_line_status
+
+  - name: STATION_ARRIVAL_SUMMARY_TABLE
+    valueFrom: station_arrival_summary
+
+  - name: DAILY_NETWORK_KPIS_TABLE
+    valueFrom: daily_network_kpis
+
+  - name: GOLD_VALIDATION_RESULTS_TABLE
+    valueFrom: gold_validation_results
+
+  - name: STREAMLIT_GATHER_USAGE_STATS
+    value: "false"
