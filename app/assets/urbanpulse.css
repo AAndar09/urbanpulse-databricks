@@ -1019,3 +1019,209 @@ a {
         padding-bottom: 12px;
     }
 }
+
+/* =========================================================
+   Station Arrivals
+   ========================================================= */
+
+.filter-card {
+    overflow: visible;
+}
+
+.filter-card .card-body {
+    padding: 20px;
+}
+
+.filter-card label {
+    margin-bottom: 8px;
+
+    color:
+        var(--up-text-soft);
+
+    font-size: 0.78rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+}
+
+
+/* ---------------------------------------------------------
+   Dash dropdowns
+   --------------------------------------------------------- */
+
+.filter-card .Select-control {
+    min-height: 42px;
+
+    background:
+        var(--up-surface) !important;
+
+    border:
+        1px solid var(--up-border) !important;
+
+    border-radius:
+        var(--up-radius-sm) !important;
+
+    box-shadow: none !important;
+}
+
+.filter-card .Select-control:hover {
+    border-color:
+        var(--up-blue) !important;
+}
+
+.filter-card .Select-placeholder,
+.filter-card .Select-value-label {
+    color:
+        var(--up-text) !important;
+}
+
+.filter-card .Select-menu-outer {
+    z-index: 9999;
+
+    background:
+        var(--up-surface) !important;
+
+    border:
+        1px solid var(--up-border) !important;
+
+    box-shadow:
+        var(--up-shadow-md);
+}
+
+.filter-card .Select-option {
+    color:
+        var(--up-text) !important;
+}
+
+.filter-card .Select-option.is-focused {
+    background:
+        var(--up-surface-hover) !important;
+}
+
+
+/* ---------------------------------------------------------
+   Arrival freshness
+   --------------------------------------------------------- */
+
+.arrival-freshness {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    padding:
+        8px 12px;
+
+    background:
+        var(--up-surface-soft);
+
+    border:
+        1px solid var(--up-border);
+
+    border-radius:
+        var(--up-radius-pill);
+
+    color:
+        var(--up-text);
+
+    font-size: 0.8rem;
+}
+
+
+/* ---------------------------------------------------------
+   Arrival table
+   --------------------------------------------------------- */
+
+.arrival-table {
+    min-width: 1100px;
+}
+
+.arrival-table thead th {
+    color:
+        var(--up-muted);
+
+    font-size: 0.7rem;
+    font-weight: 750;
+
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+
+    white-space: nowrap;
+
+    border-bottom:
+        1px solid var(--up-border);
+}
+
+.arrival-table tbody tr {
+    border-bottom:
+        1px solid var(--up-border-soft);
+}
+
+.arrival-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.arrival-table tbody tr:hover {
+    background:
+        var(--up-surface-hover);
+}
+
+.arrival-table td {
+    white-space: nowrap;
+
+    color:
+        var(--up-text-soft);
+
+    font-size: 0.86rem;
+}
+
+
+/* ---------------------------------------------------------
+   Loading indicator
+   --------------------------------------------------------- */
+
+._dash-loading-callback {
+    color:
+        var(--up-blue) !important;
+}
+
+
+/* ---------------------------------------------------------
+   Night mode preparation
+   --------------------------------------------------------- */
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-control,
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-menu-outer {
+    background:
+        var(--up-surface) !important;
+
+    border-color:
+        var(--up-border) !important;
+}
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-value-label,
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-placeholder,
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-option {
+    color:
+        var(--up-text) !important;
+}
+
+[data-bs-theme="dark"]
+.filter-card
+.Select-option.is-focused {
+    background:
+        var(--up-surface-hover) !important;
+}

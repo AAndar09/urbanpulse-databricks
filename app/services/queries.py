@@ -182,3 +182,38 @@ def get_recent_network_trends():
     """
 
     return run_query(query)
+
+def get_station_arrival_summary():
+    table_name = os.environ[
+        "STATION_ARRIVAL_SUMMARY_TABLE"
+    ]
+
+    query = f"""
+        SELECT
+            station_key,
+            station_id,
+            station_name,
+            latitude,
+            longitude,
+            line_key,
+            line_id,
+            line_name,
+            arrival_observations,
+            distinct_vehicles,
+            avg_eta_seconds,
+            min_eta_seconds,
+            max_eta_seconds,
+            next_expected_arrival_utc,
+            next_expected_arrival_local,
+            latest_prediction_timestamp_utc,
+            latest_prediction_timestamp_local,
+            serving_updated_at
+
+        FROM {table_name}
+
+        ORDER BY
+            station_name,
+            line_name
+    """
+
+    return run_query(query)

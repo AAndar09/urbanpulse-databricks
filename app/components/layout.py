@@ -29,6 +29,13 @@ def build_navbar():
                             href="/line-status",
                             active="exact",
                         ),
+
+                        dbc.NavLink(
+                            "Station Arrivals",
+                            href="/station-arrivals",
+                            active="exact",
+                        ),
+                        
                     ],
                     navbar=True,
                     className="ms-auto",
