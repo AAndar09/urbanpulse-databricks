@@ -21,7 +21,31 @@ def run_query(query: str):
 
 
 def get_current_line_status():
+    table_name = os.environ[
+        "CURRENT_LINE_STATUS_TABLE"
+    ]
 
+    query = f"""
+        SELECT
+            line_key,
+            line_id,
+            line_name,
+            mode_name,
+            status_severity,
+            status_description,
+            status_reason,
+            is_good_service,
+            is_disrupted,
+            status_snapshot_at_utc,
+            status_snapshot_at_local,
+            serving_updated_at
+
+        FROM {table_name}
+
+        ORDER BY line_name
+    """
+
+    return run_query(query)
     table_name = os.environ[
         "CURRENT_LINE_STATUS_TABLE"
     ]
