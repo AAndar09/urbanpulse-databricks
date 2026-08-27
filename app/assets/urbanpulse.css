@@ -940,85 +940,9 @@ a {
 
 
 /* =========================================================
-   22. Responsive behaviour
+   22. Responsive behaviour - DEPRECATED
+   See section 25 for consolidated responsive rules
    ========================================================= */
-
-@media (max-width: 992px) {
-    .page-container {
-        padding:
-            28px 24px 40px;
-    }
-
-    .reason-cell {
-        min-width: 280px;
-    }
-}
-
-
-@media (max-width: 768px) {
-    .urbanpulse-navbar {
-        min-height: 64px;
-    }
-
-    .page-container {
-        padding:
-            20px 16px 32px;
-    }
-
-    .page-title {
-        font-size: 1.8rem;
-    }
-
-    .page-description {
-        font-size: 0.9rem;
-    }
-
-    .section-header {
-        margin-top: 30px;
-    }
-
-    .section-title {
-        font-size: 1.12rem;
-    }
-
-    .kpi-value {
-        font-size: 1.6rem;
-    }
-
-    .reason-cell {
-        min-width: 250px;
-    }
-
-    .theme-toggle-label {
-        display: none;
-    }
-
-    .theme-toggle {
-        width: 38px;
-        height: 38px;
-        padding: 0;
-    }
-}
-
-
-@media (max-width: 576px) {
-    .page-kicker {
-        font-size: 0.68rem;
-    }
-
-    .page-title {
-        font-size: 1.65rem;
-    }
-
-    .kpi-card .card-body {
-        padding: 16px;
-    }
-
-    .table > :not(caption) > * > * {
-        padding-top: 12px;
-        padding-bottom: 12px;
-    }
-}
 
 /* =========================================================
    Station Arrivals
@@ -1227,8 +1151,12 @@ a {
 }
 
 /* =========================================================
-   Responsive application layout
+   25. Consolidated Responsive Design
    ========================================================= */
+
+/* ---------------------------------------------------------
+   Base: Prevent horizontal overflow
+   --------------------------------------------------------- */
 
 html,
 body {
@@ -1237,9 +1165,18 @@ body {
     overflow-x: hidden;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    position: relative;
+    overflow-x: hidden;
+}
+
 
 /* ---------------------------------------------------------
-   Navbar
+   Navbar: Mobile collapse
    --------------------------------------------------------- */
 
 .navbar-collapse {
@@ -1257,7 +1194,7 @@ body {
 
 
 /* ---------------------------------------------------------
-   Tables
+   Tables: Touch-friendly horizontal scroll
    --------------------------------------------------------- */
 
 .table-responsive {
@@ -1272,7 +1209,7 @@ body {
 
 
 /* ---------------------------------------------------------
-   Charts
+   Charts: Contain within viewport
    --------------------------------------------------------- */
 
 .js-plotly-plot,
@@ -1286,9 +1223,18 @@ body {
     overflow: hidden;
 }
 
+.content-card .js-plotly-plot {
+    max-width: 100% !important;
+}
+
+.content-card .plot-container {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 
 /* ---------------------------------------------------------
-   Prevent long disruption text breaking layout
+   Disruption text: Word wrap
    --------------------------------------------------------- */
 
 .reason-cell,
@@ -1298,9 +1244,24 @@ body {
     word-break: normal;
 }
 
+.disruption-status-cell {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+
+/* ---------------------------------------------------------
+   Status badges: Allow wrapping in tight spaces
+   --------------------------------------------------------- */
+
+.status-badge {
+    display: inline-block;
+    white-space: nowrap;
+}
+
 
 /* =========================================================
-   Tablet
+   Tablet (< 992px, below Bootstrap lg)
    ========================================================= */
 
 @media (max-width: 991.98px) {
@@ -1336,7 +1297,7 @@ body {
 
 
 /* =========================================================
-   Mobile
+   Mobile (< 768px, below Bootstrap md)
    ========================================================= */
 
 @media (max-width: 767.98px) {
@@ -1383,7 +1344,7 @@ body {
     }
 
 
-    /* KPI */
+    /* KPI Cards */
 
     .kpi-card .card-body {
         padding: 15px;
@@ -1402,7 +1363,7 @@ body {
     }
 
 
-    /* Cards */
+    /* Content Cards */
 
     .content-card {
         border-radius: 14px;
@@ -1468,7 +1429,7 @@ body {
 
 
 /* =========================================================
-   Small phones
+   Small phones (< 480px, ~ 390px target)
    ========================================================= */
 
 @media (max-width: 479.98px) {
