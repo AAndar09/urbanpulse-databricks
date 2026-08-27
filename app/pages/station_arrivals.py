@@ -81,19 +81,9 @@ def weighted_average_eta(dataframe):
         return None
 
     valid_df = dataframe[
-        dataframe[
-            "avg_eta_seconds"
-        ].notna()
-        &
-        dataframe[
-            "arrival_observations"
-        ].notna()
-        &
-        (
-            dataframe[
-                "arrival_observations"
-            ] > 0
-        )
+        dataframe["avg_eta_seconds"].notna()
+        & dataframe["arrival_observations"].notna()
+        & (dataframe["arrival_observations"] > 0)
     ]
 
     if valid_df.empty:
@@ -109,11 +99,8 @@ def weighted_average_eta(dataframe):
         return None
 
     weighted_total = (
-        valid_df[
-            "avg_eta_seconds"
-        ].astype(float)
-        *
-        weights
+        valid_df["avg_eta_seconds"].astype(float)
+        * weights
     ).sum()
 
     return weighted_total / weight_total
@@ -212,9 +199,7 @@ def style_figure(
     return figure
 
 
-def build_station_options(
-    dataframe,
-):
+def build_station_options(dataframe):
     station_records = (
         dataframe[
             [
@@ -319,9 +304,8 @@ def build_arrival_content(
                 build_section_title(
                     "Arrival Summary",
                     (
-                        "Metrics reflect the "
-                        "current station and "
-                        "line selection."
+                        "Metrics reflect the current "
+                        "station and line selection."
                     ),
                 ),
 
@@ -336,9 +320,8 @@ def build_arrival_content(
 
                         html.P(
                             (
-                                "No station-line "
-                                "services match the "
-                                "selected filters."
+                                "No station-line services "
+                                "match the selected filters."
                             ),
                             className=(
                                 "empty-state-text"
@@ -355,9 +338,7 @@ def build_arrival_content(
     # KPIs
     # -----------------------------------------------------
 
-    service_count = len(
-        dataframe
-    )
+    service_count = len(dataframe)
 
     arrival_observations = int(
         dataframe[
@@ -367,16 +348,12 @@ def build_arrival_content(
         .sum()
     )
 
-    average_eta = (
-        weighted_average_eta(
-            dataframe
-        )
+    average_eta = weighted_average_eta(
+        dataframe
     )
 
-    next_arrival = (
-        get_next_arrival(
-            dataframe
-        )
+    next_arrival = get_next_arrival(
+        dataframe
     )
 
     latest_prediction = (
@@ -423,10 +400,8 @@ def build_arrival_content(
         labels={
             "station_display_name":
                 "Station",
-
             "arrival_observations":
                 "Arrival Observations",
-
             "line_name":
                 "Tube Line",
         },
@@ -457,7 +432,6 @@ def build_arrival_content(
     )
 
     for _, row in table_df.iterrows():
-
         arrival_count = (
             int(
                 row[
@@ -601,7 +575,7 @@ def build_arrival_content(
 
 
     # -----------------------------------------------------
-    # Result
+    # Final content
     # -----------------------------------------------------
 
     return html.Div(
@@ -609,9 +583,8 @@ def build_arrival_content(
             build_section_title(
                 "Arrival Summary",
                 (
-                    "Metrics reflect the "
-                    "current station and "
-                    "line selection."
+                    "Metrics reflect the current "
+                    "station and line selection."
                 ),
             ),
 
@@ -621,9 +594,7 @@ def build_arrival_content(
                         build_kpi_card(
                             "Station-Line Services",
                             service_count,
-                            (
-                                "Services represented"
-                            ),
+                            "Services represented",
                             "primary",
                         ),
                         xs=12,
@@ -637,9 +608,7 @@ def build_arrival_content(
                             (
                                 f"{arrival_observations:,}"
                             ),
-                            (
-                                "Predictions captured"
-                            ),
+                            "Predictions captured",
                             "primary",
                         ),
                         xs=12,
@@ -653,9 +622,7 @@ def build_arrival_content(
                             format_eta(
                                 average_eta
                             ),
-                            (
-                                "Observation weighted"
-                            ),
+                            "Observation weighted",
                             "warning",
                         ),
                         xs=12,
@@ -669,9 +636,7 @@ def build_arrival_content(
                             format_timestamp(
                                 next_arrival
                             ),
-                            (
-                                "Local London time"
-                            ),
+                            "Local London time",
                             "success",
                         ),
                         xs=12,
@@ -705,7 +670,6 @@ def build_arrival_content(
                 ),
             ),
 
-
             build_section_title(
                 "Arrival Activity",
                 (
@@ -730,16 +694,17 @@ def build_arrival_content(
                         },
                     )
                 ),
-                className="content-card",
+                className=(
+                    "content-card "
+                    "chart-card"
+                ),
             ),
-
 
             build_section_title(
                 "Station and Line Detail",
                 (
                     "Latest ETA metrics from the "
-                    "Gold station arrival "
-                    "serving table."
+                    "Gold station arrival serving table."
                 ),
             ),
 
@@ -754,155 +719,198 @@ def build_arrival_content(
 
 
 # =========================================================
-# Page layout
+# Lightweight page shell
 # =========================================================
 
 def build_layout():
+    """
+    Return the page without querying Databricks.
+
+    Station arrival data is loaded after the page shell
+    has rendered.
+    """
+
+    return html.Main(
+        [
+            dcc.Store(
+                id="station-arrivals-data",
+                data=[],
+            ),
+
+            build_page_header(
+                "Operations",
+                "Station Arrivals",
+                (
+                    "Arrival activity and ETA "
+                    "intelligence across monitored "
+                    "London Underground stations."
+                ),
+            ),
+
+            dcc.Interval(
+                id="station-arrivals-loader",
+                interval=500,
+                n_intervals=0,
+                max_intervals=1,
+            ),
+
+            html.Div(
+                id="station-arrivals-load-error"
+            ),
+
+            build_section_title(
+                "Explore Arrivals",
+                (
+                    "Choose a station to limit Tube "
+                    "Line options to valid station-line "
+                    "combinations."
+                ),
+            ),
+
+            dbc.Card(
+                dbc.CardBody(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.Label(
+                                        "Station",
+                                    ),
+
+                                    dcc.Dropdown(
+                                        id=(
+                                            "arrival-"
+                                            "station-filter"
+                                        ),
+                                        options=[
+                                            {
+                                                "label":
+                                                    "All stations",
+                                                "value":
+                                                    ALL_STATIONS,
+                                            }
+                                        ],
+                                        value=(
+                                            ALL_STATIONS
+                                        ),
+                                        clearable=False,
+                                        searchable=True,
+                                    ),
+                                ],
+                                xs=12,
+                                lg=6,
+                            ),
+
+                            dbc.Col(
+                                [
+                                    dbc.Label(
+                                        "Tube Line",
+                                    ),
+
+                                    dcc.Dropdown(
+                                        id=(
+                                            "arrival-"
+                                            "line-filter"
+                                        ),
+                                        options=[
+                                            {
+                                                "label":
+                                                    "All lines",
+                                                "value":
+                                                    ALL_LINES,
+                                            }
+                                        ],
+                                        value=(
+                                            ALL_LINES
+                                        ),
+                                        clearable=False,
+                                        searchable=True,
+                                    ),
+                                ],
+                                xs=12,
+                                lg=6,
+                            ),
+                        ],
+                        className="g-3",
+                    )
+                ),
+                className=(
+                    "content-card "
+                    "filter-card"
+                ),
+            ),
+
+            dcc.Loading(
+                type="circle",
+                children=html.Div(
+                    id=(
+                        "station-arrivals-content"
+                    ),
+                    children=dbc.Alert(
+                        (
+                            "Loading station "
+                            "arrival data..."
+                        ),
+                        color="light",
+                    ),
+                ),
+            ),
+        ],
+        className="page-container",
+    )
+
+
+layout = build_layout
+
+
+# =========================================================
+# Lazy Databricks loading
+# =========================================================
+
+@callback(
+    Output(
+        "station-arrivals-data",
+        "data",
+    ),
+    Output(
+        "station-arrivals-load-error",
+        "children",
+    ),
+    Input(
+        "station-arrivals-loader",
+        "n_intervals",
+    ),
+    prevent_initial_call=True,
+)
+def load_station_arrival_data(_):
     try:
         arrivals_df = (
             get_station_arrival_summary()
         )
 
         if arrivals_df.empty:
-            return html.Main(
-                [
-                    build_page_header(
-                        "Operations",
-                        "Station Arrivals",
-                        (
-                            "Arrival activity and "
-                            "ETA intelligence across "
-                            "monitored London "
-                            "Underground stations."
-                        ),
+            return (
+                [],
+                dbc.Alert(
+                    (
+                        "No station arrival data "
+                        "is currently available."
                     ),
-
-                    dbc.Alert(
-                        (
-                            "No station arrival "
-                            "data is available."
-                        ),
-                        color="warning",
-                    ),
-                ],
-                className="page-container",
+                    color="warning",
+                    className="mb-3",
+                ),
             )
 
-
-        return html.Main(
-            [
-                dcc.Store(
-                    id="station-arrivals-data",
-                    data=serialise_dataframe(
-                        arrivals_df
-                    ),
-                ),
-
-
-                build_page_header(
-                    "Operations",
-                    "Station Arrivals",
-                    (
-                        "Arrival activity and ETA "
-                        "intelligence across monitored "
-                        "London Underground stations."
-                    ),
-                ),
-
-
-                build_section_title(
-                    "Explore Arrivals",
-                    (
-                        "Choose a station first to "
-                        "limit Tube Line options to "
-                        "valid station-line combinations."
-                    ),
-                ),
-
-
-                dbc.Card(
-                    dbc.CardBody(
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    [
-                                        dbc.Label(
-                                            "Station",
-                                        ),
-
-                                        dcc.Dropdown(
-                                            id=(
-                                                "arrival-"
-                                                "station-filter"
-                                            ),
-                                            options=(
-                                                build_station_options(
-                                                    arrivals_df
-                                                )
-                                            ),
-                                            value=(
-                                                ALL_STATIONS
-                                            ),
-                                            clearable=False,
-                                            searchable=True,
-                                        ),
-                                    ],
-                                    xs=12,
-                                    lg=6,
-                                ),
-
-                                dbc.Col(
-                                    [
-                                        dbc.Label(
-                                            "Tube Line",
-                                        ),
-
-                                        dcc.Dropdown(
-                                            id=(
-                                                "arrival-"
-                                                "line-filter"
-                                            ),
-                                            options=(
-                                                build_line_options(
-                                                    arrivals_df
-                                                )
-                                            ),
-                                            value=(
-                                                ALL_LINES
-                                            ),
-                                            clearable=False,
-                                            searchable=True,
-                                        ),
-                                    ],
-                                    xs=12,
-                                    lg=6,
-                                ),
-                            ],
-                            className="g-3",
-                        )
-                    ),
-                    className=(
-                        "content-card "
-                        "filter-card"
-                    ),
-                ),
-
-
-                dcc.Loading(
-                    type="circle",
-                    children=html.Div(
-                        id=(
-                            "station-arrivals-content"
-                        )
-                    ),
-                ),
-            ],
-            className="page-container",
+        return (
+            serialise_dataframe(
+                arrivals_df
+            ),
+            None,
         )
 
-
     except Exception as exc:
-        return dbc.Container(
+        return (
+            [],
             dbc.Alert(
                 [
                     html.H4(
@@ -916,16 +924,57 @@ def build_layout():
                     ),
 
                     html.P(
+                        (
+                            "UrbanPulse could not "
+                            "retrieve the latest "
+                            "Databricks data."
+                        )
+                    ),
+
+                    html.Hr(),
+
+                    html.Small(
                         str(exc)
                     ),
                 ],
                 color="danger",
+                className="mb-3",
             ),
-            className="py-5",
         )
 
 
-layout = build_layout
+# =========================================================
+# Populate station options
+# =========================================================
+
+@callback(
+    Output(
+        "arrival-station-filter",
+        "options",
+    ),
+    Input(
+        "station-arrivals-data",
+        "data",
+    ),
+)
+def update_station_options(
+    stored_data,
+):
+    if not stored_data:
+        return [
+            {
+                "label": "All stations",
+                "value": ALL_STATIONS,
+            }
+        ]
+
+    dataframe = pd.DataFrame(
+        stored_data
+    )
+
+    return build_station_options(
+        dataframe
+    )
 
 
 # =========================================================
@@ -937,31 +986,27 @@ layout = build_layout
         "arrival-line-filter",
         "options",
     ),
-
     Output(
         "arrival-line-filter",
         "value",
     ),
-
     Input(
         "arrival-station-filter",
         "value",
     ),
-
+    Input(
+        "station-arrivals-data",
+        "data",
+    ),
     State(
         "arrival-line-filter",
         "value",
     ),
-
-    State(
-        "station-arrivals-data",
-        "data",
-    ),
 )
 def update_line_options(
     selected_station,
-    current_line,
     stored_data,
+    current_line,
 ):
     if not stored_data:
         return (
@@ -973,7 +1018,6 @@ def update_line_options(
             ],
             ALL_LINES,
         )
-
 
     dataframe = pd.DataFrame(
         stored_data
@@ -1007,17 +1051,14 @@ def update_line_options(
         "station-arrivals-content",
         "children",
     ),
-
     Input(
         "arrival-station-filter",
         "value",
     ),
-
     Input(
         "arrival-line-filter",
         "value",
     ),
-
     Input(
         "station-arrivals-data",
         "data",
@@ -1031,17 +1072,15 @@ def update_station_arrivals(
     if not stored_data:
         return dbc.Alert(
             (
-                "No station arrival "
-                "data is available."
+                "Waiting for station "
+                "arrival data..."
             ),
-            color="warning",
+            color="light",
         )
-
 
     dataframe = pd.DataFrame(
         stored_data
     )
-
 
     if (
         selected_station
@@ -1054,7 +1093,6 @@ def update_station_arrivals(
             ] == selected_station
         ]
 
-
     if (
         selected_line
         and selected_line
@@ -1065,7 +1103,6 @@ def update_station_arrivals(
                 "line_id"
             ] == selected_line
         ]
-
 
     return build_arrival_content(
         dataframe
